@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: "jev-gate: a safety gate for AI coding agents"
+message: "If you use this software or its measurements, please cite it."
+type: software
+authors:
+  - given-names: Eugeniu
+    family-names: Ghelbur
+repository-code: "https://github.com/eugeniughelbur/jev-gate"
+license: MIT
+date-released: 2026-09-20
+keywords:
+  - agent-harness
+  - ai-safety
+  - claude-code
+  - jev
+  - typesafe
+  - prompt-injection
+  - tool-calling

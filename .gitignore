@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+results.jsonl
+*.jsonl
+!fixtures/*.json
