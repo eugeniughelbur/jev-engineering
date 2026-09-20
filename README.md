@@ -19,8 +19,8 @@ It also ships the attack kit I used to find out whether a gate like this holds. 
 Two commands in Claude Code:
 
 ```bash
-claude plugin marketplace add eugeniughelbur/jev-gate
-claude plugin install jev-gate@jev-gate
+claude plugin marketplace add eugeniughelbur/jev-engineering
+claude plugin install jev-engineering@jev-engineering
 ```
 
 Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It installs in observe mode, so it logs every decision and blocks nothing until you say otherwise.
@@ -28,8 +28,8 @@ Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It instal
 Or run it standalone:
 
 ```bash
-git clone https://github.com/eugeniughelbur/jev-gate
-cd jev-gate
+git clone https://github.com/eugeniughelbur/jev-engineering
+cd jev-engineering
 export OPENROUTER_API_KEY=sk-or-...
 ./jev_gate.py --explain "git push --force origin main"
 ```
@@ -96,16 +96,16 @@ Installed as a plugin, you get:
 Install it as a Python package and call `decide()` from your own code:
 
 ```bash
-pip install jev-gate
+pip install jev-engineering
 jev-gate --explain "git push --force origin main"
 ```
 
 Or expose it over MCP, so Cursor, Codex, Windsurf and anything else that speaks the protocol can ask it:
 
 ```json
-{ "mcpServers": { "jev-gate": {
+{ "mcpServers": { "jev-engineering": {
   "command": "uv",
-  "args": ["run", "--directory", "/abs/path/to/jev-gate", "mcp_server.py"],
+  "args": ["run", "--directory", "/abs/path/to/jev-engineering", "mcp_server.py"],
   "env": { "OPENROUTER_API_KEY": "sk-or-..." } } } }
 ```
 

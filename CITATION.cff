@@ -5,7 +5,7 @@ type: software
 authors:
   - given-names: Eugeniu
     family-names: Ghelbur
-repository-code: "https://github.com/eugeniughelbur/jev-gate"
+repository-code: "https://github.com/eugeniughelbur/jev-engineering"
 license: MIT
 date-released: 2026-09-20
 keywords:

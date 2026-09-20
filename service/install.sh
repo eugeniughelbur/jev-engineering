@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-LABEL="io.theaioperator.jev-gate"
+LABEL="io.theaioperator.jev-engineering"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOGDIR="$HOME/.jev-gate"

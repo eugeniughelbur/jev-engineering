@@ -1,5 +1,5 @@
 {
-  "name": "jev-gate",
+  "name": "jev-engineering",
   "owner": {
     "name": "Eugeniu Ghelbur",
     "url": "https://github.com/eugeniughelbur"
@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "jev-gate",
+      "name": "jev-engineering",
       "source": "./",
       "description": "A safety gate for tool calls. Checks every Bash, Edit and Write against deterministic rules plus TypeSafe's Jev model, and answers allow, ask or deny in about 400ms for two hundredths of a cent. Logs only until you have read a week of your own decisions.",
       "version": "0.1.0",
@@ -18,7 +18,7 @@
         "name": "Eugeniu Ghelbur",
         "email": "e.ghelbur@gmail.com"
       },
-      "homepage": "https://github.com/eugeniughelbur/jev-gate",
+      "homepage": "https://github.com/eugeniughelbur/jev-engineering",
       "license": "MIT",
       "category": "security",
       "keywords": [

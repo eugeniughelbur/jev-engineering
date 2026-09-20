@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "jev-gate"
+name = "jev-engineering"
 version = "0.2.0"
-description = "A safety gate for AI agents. Allow, ask or deny on every tool call, in ~400ms for two hundredths of a cent."
+description = "The decision layer for AI agents. Typed, calibrated decisions in about 400ms for two hundredths of a cent: gate tool calls, route models, rank options."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -26,7 +26,7 @@ mcp = ["mcp"]
 
 [project.urls]
 Homepage = "https://eugeniughelbur.github.io/jev-gate/"
-Repository = "https://github.com/eugeniughelbur/jev-gate"
+Repository = "https://github.com/eugeniughelbur/jev-engineering"
 Article = "https://theaioperator.io/p/what-is-jev-the-manual-for-agent"
 
 [project.scripts]

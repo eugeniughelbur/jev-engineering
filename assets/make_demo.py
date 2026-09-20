@@ -111,7 +111,7 @@ def frame(beat: dict, reveal: float) -> Image.Image:
         draw.text((x0 + stamp_w + 36, y0 + 54), beat["meta"], font=font(MONO, 21), fill=MUTED)
 
     draw.line([(56, 448), (W - 56, 448)], fill=(210, 198, 180), width=2)
-    draw.text((56, 466), "github.com/eugeniughelbur/jev-gate", font=font(MONO, 19), fill=MUTED)
+    draw.text((56, 466), "github.com/eugeniughelbur/jev-engineering", font=font(MONO, 19), fill=MUTED)
     return img
 
 

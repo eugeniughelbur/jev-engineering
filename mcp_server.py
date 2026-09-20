@@ -11,15 +11,15 @@ and this when you want the agent to be able to seek a second opinion.
 
 Cursor, in .cursor/mcp.json:
 
-    { "mcpServers": { "jev-gate": {
+    { "mcpServers": { "jev-engineering": {
         "command": "uv",
-        "args": ["run", "--directory", "/abs/path/to/jev-gate", "mcp_server.py"],
+        "args": ["run", "--directory", "/abs/path/to/jev-engineering", "mcp_server.py"],
         "env": { "OPENROUTER_API_KEY": "sk-or-..." } } } }
 
 Codex:
 
-    codex mcp add jev-gate --env OPENROUTER_API_KEY=sk-or-... \
-      -- uv run --directory /abs/path/to/jev-gate mcp_server.py
+    codex mcp add jev-engineering --env OPENROUTER_API_KEY=sk-or-... \
+      -- uv run --directory /abs/path/to/jev-engineering mcp_server.py
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from jev_gate import LOG, MODE, ask_jev, decide, log  # noqa: E402
 from packs import load_pack, pack_names  # noqa: E402
 
-mcp = _Server("jev-gate")
+mcp = _Server("jev-engineering")
 
 
 def key() -> str:
