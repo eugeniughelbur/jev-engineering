@@ -88,6 +88,18 @@ Installed as a plugin, you get:
 | `/jev-calibrate` | Reads your week of decisions and hands back your thresholds, your fast-path rules and your hard-rule candidates. |
 | `/jev-attack` | Fires 300 injections at your own gate and reports what got through. |
 
+## Guarding everything else
+
+The plugin guards one agent. Run it as a background service and anything can ask it: n8n, cron jobs, a deploy step, a bot about to send a message.
+
+```bash
+export OPENROUTER_API_KEY=sk-or-...
+./service/install.sh
+curl -s localhost:8787/check -d '{"command":"aws s3 rm s3://prod-backups --recursive"}'
+```
+
+It starts at login, restarts if it dies, binds to loopback only and refuses to start on a public interface. Full setup and wiring examples in [service/](service/).
+
 ## It gets better the longer you run it
 
 After a week in observe mode, run:
