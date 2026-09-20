@@ -87,6 +87,7 @@ Installed as a plugin, you get:
 | `/jev-status` | Mode, key, and what the log holds so far. Runs one live check so you can see it work. |
 | `/jev-calibrate` | Reads your week of decisions and hands back your thresholds, your fast-path rules and your hard-rule candidates. |
 | `/jev-attack` | Fires 300 injections at your own gate and reports what got through. |
+| `/jev-policy` | The rules in force, which layer each came from, and pulls your team's latest. |
 
 ## Guarding everything else
 
@@ -99,6 +100,28 @@ curl -s localhost:8787/check -d '{"command":"aws s3 rm s3://prod-backups --recur
 ```
 
 It starts at login, restarts if it dies, binds to loopback only and refuses to start on a public interface. Full setup and wiring examples in [service/](service/).
+
+## One set of rules for a team
+
+The rules live in `policy.json`, not in the code. Publish your team's copy anywhere that serves a raw file, point everyone at it, and each person pulls the same hard rules, fast path and thresholds.
+
+```bash
+export JEV_POLICY_URL=https://raw.githubusercontent.com/you/team-policy/main/policy.json
+uv run policy.py pull
+uv run policy.py show
+```
+
+Three layers merge: the shipped default, the team policy, then `~/.jev-gate/policy.local.json`. Layers **add rules and tighten thresholds, never loosen them**. Try to raise your own `deny_above` above the team's and it is ignored, and `show` tells you it was:
+
+```
+  yours: +1 hard rule(s)
+  yours: deny_above tightened 0.9 -> 0.75
+  yours: confidence_floor=0.3 ignored, it would loosen 0.45
+```
+
+A shared rule that any member can quietly switch off is not a shared rule.
+
+Nothing central runs. Everyone decides locally, so no server has to stay alive and no single failure takes the whole team's agents down. The team file is a file.
 
 ## It gets better the longer you run it
 
