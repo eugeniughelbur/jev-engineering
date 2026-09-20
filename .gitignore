@@ -8,3 +8,4 @@ results.jsonl
 *.egg-info/
 build/
 dist/
+uv.lock

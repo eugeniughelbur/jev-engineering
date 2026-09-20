@@ -1,7 +1,0 @@
-attack_test
-calibrate
-jev_gate
-packs
-policy
-pool
-serve
