@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from jev_gate import decide  # noqa: E402
+from layer import DEFAULT_TIERS, ROUTE_CONFIDENCE_FLOOR  # noqa: E402
 
 # Each case: command, expected verdict, expected source, why it matters.
 CASES = [
@@ -40,6 +41,17 @@ def main() -> int:
         print(f"{'pass' if ok else 'FAIL'}  {command[:42]:44} {got.verdict}/{got.source}")
         if not ok:
             failures.append(f"{command}: wanted {want_verdict}/{want_source}, got {got.verdict}/{got.source}  ({why})")
+
+    # The layer primitives must keep their shape, since callers branch on it.
+    check_shape = [
+        ("route tiers are ordered cheapest first", list(DEFAULT_TIERS)[0] == "fast"),
+        ("route has a confidence floor", 0 < ROUTE_CONFIDENCE_FLOOR < 1),
+        ("route has at least three tiers", len(DEFAULT_TIERS) >= 3),
+    ]
+    for name, ok in check_shape:
+        print(f"{'pass' if ok else 'FAIL'}  {name}")
+        if not ok:
+            failures.append(name)
 
     if failures:
         print(f"\n{len(failures)} failure(s):")

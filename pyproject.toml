@@ -36,9 +36,10 @@ jev-policy = "policy:main"
 jev-packs = "packs:main"
 jev-pool = "pool:main"
 jev-serve = "serve:main"
+jev-layer = "layer:main"
 
 [tool.setuptools]
-py-modules = ["jev_gate", "policy", "packs", "calibrate", "pool", "serve", "attack_test"]
+py-modules = ["jev_gate", "policy", "packs", "calibrate", "pool", "serve", "layer", "attack_test"]
 
 [tool.ruff]
 line-length = 100

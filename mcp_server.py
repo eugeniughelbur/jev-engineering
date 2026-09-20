@@ -91,6 +91,40 @@ check_action.__doc__ = (check_action.__doc__ or "").format(packs=", ".join(pack_
 
 
 @mcp.tool()
+def route_turn(task: str, tiers: list[str] | None = None) -> str:
+    """Pick which model tier should handle this turn, before spending on it.
+
+    Returns a tier, the odds on each, and a confidence. Call it at the start of
+    a turn so a rename does not cost what an architecture decision costs.
+
+    task: what this turn is being asked to do.
+    tiers: your tier names, cheapest first. Defaults to fast, standard, frontier.
+    """
+    from layer import DEFAULT_TIERS, route
+
+    chosen = None
+    if tiers:
+        chosen = {t: DEFAULT_TIERS.get(t, f"Use the {t} tier.") for t in tiers}
+    return json.dumps(route(task, chosen), indent=2)
+
+
+@mcp.tool()
+def keep_context(items: list[str], goal: str, budget: float = 0.5) -> str:
+    """Decide which pieces of context still earn their place, in one call.
+
+    Nothing is rewritten or summarised. Each item is kept verbatim or dropped,
+    because a summary silently loses the exact path or error you needed later.
+
+    items: the context pieces, usually tool calls and their results.
+    goal: what the agent is trying to finish.
+    budget: the share to keep when scores are close. 0.5 keeps half.
+    """
+    from layer import keep
+
+    return json.dumps(keep(items, goal, budget), indent=2)
+
+
+@mcp.tool()
 def rank_options(options: list[str], criterion: str, context: str = "") -> str:
     """Rank a list of options against one criterion, in a single call.
 

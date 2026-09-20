@@ -80,6 +80,38 @@ export JEV_GATE_MODE=observe
 
 Read `~/.jev-gate/decisions.jsonl` for a week before you turn anything on. That file is the only source of thresholds that will fit your work.
 
+## The three decisions an agent makes constantly
+
+The gate fires on the rare dangerous action. These fire every turn, which is where the cost and the latency actually live. Same shape underneath: state plus typed questions, one request, answers in parallel.
+
+```bash
+uv run layer.py route "fix the typo in the README heading"
+# {"tier": "fast", "confidence": 1.0, "latency_ms": 516}
+
+uv run layer.py route "redesign how we shard the primary database with zero downtime"
+# {"tier": "frontier", "confidence": 1.0, "latency_ms": 356}
+```
+
+**route** picks the model tier before you spend on the turn. When confidence drops below 0.5 on the cheapest tier it steps up one, not to the top, because falling back to the frontier model on every uncertain turn eats most of the saving.
+
+**rank** orders up to 255 options against one criterion in a single call. Useful for picking a file, a tool, or reordering search results.
+
+```bash
+uv run layer.py rank "This file holds the login and session logic" \
+  --options "src/auth/session.ts,src/db/schema.ts,README.md"
+# winner: src/auth/session.ts
+```
+
+**keep** decides which pieces of context still earn their place. Nothing is rewritten or summarised. Each item is kept verbatim or dropped, because a summary silently loses the exact path or error you needed later.
+
+```bash
+uv run layer.py keep transcript.json --goal "fix the failing session test" --budget 0.5
+```
+
+On a real eight-item transcript, in 347ms for $0.000026, it kept the failing test output, the source file and the spec, and dropped `echo hello` and `df -h`.
+
+All three are also MCP tools, so an agent can call them itself: `route_turn`, `rank_options`, `keep_context`.
+
 ## Three commands
 
 Installed as a plugin, you get:
