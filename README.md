@@ -55,6 +55,25 @@ export JEV_GATE_MODE=observe
 
 Read `~/.jev-gate/decisions.jsonl` for a week before you turn anything on. That file is the only source of thresholds that will fit your work.
 
+## It gets better the longer you run it
+
+After a week in observe mode, run:
+
+```bash
+uv run calibrate.py
+```
+
+It reads your own decision log and tells you four things:
+
+- What the gate would have cost you. If it would have interrupted more than a quarter of your work, it says so and tells you to widen the fast path before touching anything else.
+- A threshold sweep on your own traffic, not mine.
+- Which commands reached the model repeatedly and came back clean every time, printed as fast-path regexes you can paste in.
+- Which commands got stopped more than once, printed as hard-rule candidates.
+
+`--label` walks you through the ambiguous decisions, asking safe or dangerous. Once you have labels it stops guessing and shows real accuracy columns: how many dangerous commands each threshold would miss, and how many safe ones it would stop. `--apply` writes the result to `.env`.
+
+Re-run it monthly. Your commands drift, and the model gets retrained underneath you.
+
 ## Install it in your agent
 
 ### Claude Code
