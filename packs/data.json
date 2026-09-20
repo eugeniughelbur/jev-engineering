@@ -1,0 +1,27 @@
+{
+  "name": "data",
+  "description": "Reading, writing or deleting records: a database, a spreadsheet, a CRM.",
+  "questions": {
+    "scope": {
+      "type": "noul",
+      "instructions": "This touches more rows or more records than the request implies."
+    },
+    "irreversible": {
+      "type": "noul",
+      "instructions": "This change cannot be undone from a backup within an hour."
+    },
+    "personal_data": {
+      "type": "noul",
+      "instructions": "The records involved contain personal data about identifiable people."
+    },
+    "verdict": {
+      "type": "choice",
+      "instructions": "What should the gate do with this data operation?",
+      "criteria": {
+        "allow": "Run it. The scope matches the request and it is recoverable.",
+        "ask": "Confirm the scope with a human first.",
+        "deny": "Refuse. Too broad, or unrecoverable, or never asked for."
+      }
+    }
+  }
+}

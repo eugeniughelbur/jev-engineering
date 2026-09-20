@@ -1,3 +1,26 @@
+Metadata-Version: 2.4
+Name: jev-gate
+Version: 0.2.0
+Summary: A safety gate for AI agents. Allow, ask or deny on every tool call, in ~400ms for two hundredths of a cent.
+Author-email: Eugeniu Ghelbur <e.ghelbur@gmail.com>
+License: MIT
+Project-URL: Homepage, https://eugeniughelbur.github.io/jev-gate/
+Project-URL: Repository, https://github.com/eugeniughelbur/jev-gate
+Project-URL: Article, https://theaioperator.io/p/what-is-jev-the-manual-for-agent
+Keywords: ai,agents,guardrails,safety,jev,typesafe,prompt-injection,claude-code
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Security
+Classifier: Topic :: Software Development :: Quality Assurance
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Provides-Extra: mcp
+Requires-Dist: mcp; extra == "mcp"
+Dynamic: license-file
+
 ![jev-gate, every tool call checked](assets/banner.png)
 
 # jev-gate: a safety gate for AI coding agents
@@ -91,48 +114,6 @@ Installed as a plugin, you get:
 | `/jev-attack` | Fires 300 injections at your own gate and reports what got through. |
 | `/jev-policy` | The rules in force, which layer each came from, and pulls your team's latest. |
 
-## Any agent, not only coding agents
-
-Install it as a Python package and call `decide()` from your own code:
-
-```bash
-pip install jev-gate
-jev-gate --explain "git push --force origin main"
-```
-
-Or expose it over MCP, so Cursor, Codex, Windsurf and anything else that speaks the protocol can ask it:
-
-```json
-{ "mcpServers": { "jev-gate": {
-  "command": "uv",
-  "args": ["run", "--directory", "/abs/path/to/jev-gate", "mcp_server.py"],
-  "env": { "OPENROUTER_API_KEY": "sk-or-..." } } } }
-```
-
-Three MCP tools: `check_action` judges something before it happens, `rank_options` sorts up to 255 choices in one call, `gate_stats` reports what has been decided.
-
-### Question packs
-
-A gate is only as good as its questions, and shell commands are not the only thing an agent does. Five packs ship, and `pack` picks one:
-
-| Pack | For |
-|---|---|
-| `shell` | Commands in a coding agent. The default. |
-| `message` | An email, Slack message or post before it sends. |
-| `money` | A refund, payment or transfer. |
-| `data` | Reading, writing or deleting records. |
-| `publish` | A deploy, a merge, a release. |
-
-```bash
-uv run packs.py            # see them all
-```
-
-Copy the closest one into `~/.jev-gate/packs/` and edit it. Measured examples, run live:
-
-- an email containing a live API key: `private_data 0.94`, verdict `deny`
-- the same email without it: `private_data 0.05`, verdict `allow`
-- a $4,200 refund on a $42 order: `authorised 0.02`, verdict `deny`
-
 ## Guarding everything else
 
 The plugin guards one agent. Run it as a background service and anything can ask it: n8n, cron jobs, a deploy step, a bot about to send a message.
@@ -164,23 +145,6 @@ Three layers merge: the shipped default, the team policy, then `~/.jev-gate/poli
 ```
 
 A shared rule that any member can quietly switch off is not a shared rule.
-
-### Pooling what everyone learns
-
-This is the part that gets better with more people. Everyone still decides locally. Each person pushes a redacted copy of their log into a shared folder, and thresholds get fitted on the whole team:
-
-```bash
-export JEV_POOL_DIR=~/work/team-policy/pool
-uv run pool.py redact-check   # see exactly what would leave your machine
-uv run pool.py push
-uv run calibrate.py --pool    # fit on everyone's decisions, not just yours
-```
-
-Redaction runs before anything is written. Keys, tokens, emails, IPs and your home path are masked, the working directory and the time of day are never shared, and contributors appear as a hash rather than a name. `redact-check` prints the before and after so you can look rather than trust.
-
-### Rule changes get reviewed
-
-`.github/workflows/policy.yml` runs on every pull request. It validates the policy and packs, checks that redaction still masks what it claims, pins the decision order, and posts a summary saying in plain words what a threshold change lets through. The attack run is manual, because it costs money.
 
 Nothing central runs. Everyone decides locally, so no server has to stay alive and no single failure takes the whole team's agents down. The team file is a file.
 

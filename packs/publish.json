@@ -1,0 +1,27 @@
+{
+  "name": "publish",
+  "description": "Anything that goes live: a deploy, a merge, a release, a public post.",
+  "questions": {
+    "production": {
+      "type": "noul",
+      "instructions": "This affects something people are using right now."
+    },
+    "reversible": {
+      "type": "noul",
+      "instructions": "This can be rolled back in minutes without data loss."
+    },
+    "off_request": {
+      "type": "noul",
+      "instructions": "This goes beyond what the human asked to be shipped."
+    },
+    "verdict": {
+      "type": "choice",
+      "instructions": "What should the gate do with this release?",
+      "criteria": {
+        "allow": "Ship it. Low blast radius and easy to roll back.",
+        "ask": "A human approves before this goes live.",
+        "deny": "Refuse. Production, hard to reverse, or never asked for."
+      }
+    }
+  }
+}

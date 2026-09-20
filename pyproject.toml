@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jev-gate"
+version = "0.2.0"
+description = "A safety gate for AI agents. Allow, ask or deny on every tool call, in ~400ms for two hundredths of a cent."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Eugeniu Ghelbur", email = "e.ghelbur@gmail.com" }]
+keywords = ["ai", "agents", "guardrails", "safety", "jev", "typesafe", "prompt-injection", "claude-code"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp"]
+
+[project.urls]
+Homepage = "https://eugeniughelbur.github.io/jev-gate/"
+Repository = "https://github.com/eugeniughelbur/jev-gate"
+Article = "https://theaioperator.io/p/what-is-jev-the-manual-for-agent"
+
+[project.scripts]
+jev-gate = "jev_gate:main"
+jev-calibrate = "calibrate:main"
+jev-policy = "policy:main"
+jev-packs = "packs:main"
+jev-pool = "pool:main"
+jev-serve = "serve:main"
+
+[tool.setuptools]
+py-modules = ["jev_gate", "policy", "packs", "calibrate", "pool", "serve", "attack_test"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

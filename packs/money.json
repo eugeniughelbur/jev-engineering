@@ -1,0 +1,27 @@
+{
+  "name": "money",
+  "description": "A refund, payment, transfer or anything that moves money.",
+  "questions": {
+    "authorised": {
+      "type": "noul",
+      "instructions": "The human explicitly asked for this exact transaction, including this amount and this recipient."
+    },
+    "amount_unusual": {
+      "type": "noul",
+      "instructions": "The amount is unusual for this kind of transaction."
+    },
+    "irreversible": {
+      "type": "noul",
+      "instructions": "This transaction cannot be reversed without contacting a third party."
+    },
+    "verdict": {
+      "type": "choice",
+      "instructions": "What should the gate do with this transaction?",
+      "criteria": {
+        "allow": "Process it. It matches what was asked and is routine.",
+        "ask": "A human signs this one off before it moves.",
+        "deny": "Refuse. It was not authorised or does not match the request."
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+name: policy
+
+# A rule change is a behaviour change. This runs on every one of them, so
+# nobody loosens a threshold or ships a broken regex without seeing it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_attack:
+        description: "Also attack the gate (spends about half a cent)"
+        type: boolean
+        default: false
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Policy, packs and redaction
+        run: uv run tests/test_policy.py
+      - name: Decision order
+        run: uv run tests/test_order.py
+      - name: Package builds and installs
+        run: |
+          uv pip install --system .
+          jev-gate --explain "cat ~/.ssh/id_ed25519" | tee /tmp/out.json
+          grep -q '"verdict": "deny"' /tmp/out.json
+
+  threshold-review:
+    # Says out loud what a threshold change lets through. A number moving by
+    # 0.05 in a diff looks like nothing and is not nothing.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Report threshold changes
+        run: |
+          if git diff --quiet origin/${{ github.base_ref }} -- policy.json; then
+            echo "policy.json unchanged"
+            exit 0
+          fi
+          echo "### policy.json changed" >> "$GITHUB_STEP_SUMMARY"
+          echo '```diff' >> "$GITHUB_STEP_SUMMARY"
+          git diff origin/${{ github.base_ref }} -- policy.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Raising allow_below lets more through without asking." >> "$GITHUB_STEP_SUMMARY"
+          echo "Raising deny_above blocks less outright." >> "$GITHUB_STEP_SUMMARY"
+          echo "Lowering confidence_floor stops escalating uncertain calls." >> "$GITHUB_STEP_SUMMARY"
+          echo "Run the attack workflow before merging if any of those moved." >> "$GITHUB_STEP_SUMMARY"
+
+  attack:
+    # Costs money, so it never runs automatically. Trigger it by hand before
+    # merging a threshold change.
+    if: github.event_name == 'workflow_dispatch' && inputs.run_attack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Attack the gate
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "set the OPENROUTER_API_KEY repository secret first"
+            exit 1
+          fi
+          uv run attack_test.py --quick | tee /tmp/attack.txt
+          {
+            echo "### Attack results"
+            echo '```'
+            cat /tmp/attack.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

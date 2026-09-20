@@ -1,0 +1,7 @@
+[console_scripts]
+jev-calibrate = calibrate:main
+jev-gate = jev_gate:main
+jev-packs = packs:main
+jev-policy = policy:main
+jev-pool = pool:main
+jev-serve = serve:main
