@@ -26,9 +26,14 @@ jobs:
         run: uv run tests/test_order.py
       - name: Package builds and installs
         run: |
-          uv pip install --system .
-          jev-gate --explain "cat ~/.ssh/id_ed25519" | tee /tmp/out.json
+          # Installed into a venv outside the repo, then run from outside it.
+          # That proves the embedded policy fallback works, since an installed
+          # module has no policy.json sitting next to it.
+          uv venv /tmp/venv
+          uv pip install --python /tmp/venv/bin/python .
+          cd /tmp && /tmp/venv/bin/jev-gate --explain "cat ~/.ssh/id_ed25519" | tee /tmp/out.json
           grep -q '"verdict": "deny"' /tmp/out.json
+          grep -q '"source": "hard-rule"' /tmp/out.json
 
   threshold-review:
     # Says out loud what a threshold change lets through. A number moving by
