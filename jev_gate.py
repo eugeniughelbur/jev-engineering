@@ -10,10 +10,13 @@ the code the harness expects. Designed as a Claude Code PreToolUse hook, but the
 decide() function is plain Python and works anywhere.
 
 Order of operations, which is the whole design:
-  1. Fast path   - an allowlist that never calls the model.
-  2. Hard rules  - deterministic denials, no model, single-digit milliseconds.
+  1. Hard rules  - deterministic denials, no model, single-digit milliseconds.
+  2. Fast path   - an allowlist of read-only commands that never calls the model.
   3. Jev         - one request, two questions, answered in parallel.
   4. Thresholds  - your numbers, from your own observe-mode log.
+
+Denials come before the allowlist on purpose. A command name says nothing about
+its arguments, so `cat` on the allowlist must not wave through `cat ~/.ssh/id_`.
 
 Fails open. Any error, timeout or missing key falls back to the harness's own
 permission prompt, so a network blip never bricks a session.
@@ -119,9 +122,13 @@ def ask_jev(state: str, api_key: str) -> tuple[dict | None, float]:
 
 
 def decide(command: str, tool: str = "Bash", user_message: str = "", cwd: str = "") -> Decision:
-    if found := fast_path(command):
-        return found
+    # Hard rules run first, always. The fast path is an allowlist of command
+    # names, and a command name says nothing about its arguments: `cat` is
+    # harmless until it is `cat ~/.ssh/id_ed25519`. Checking the allowlist
+    # first would wave that through.
     if found := hard_rule(command):
+        return found
+    if found := fast_path(command):
         return found
 
     api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("TYPESAFE_API_KEY")

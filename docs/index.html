@@ -129,12 +129,12 @@ claude plugin install jev-gate@jev-gate</code></pre>
 
 <h2>How it decides</h2>
 <ol>
-<li><strong>Fast path.</strong> A read-only allowlist. Never calls the model.</li>
 <li><strong>Hard rules.</strong> Deterministic denials in plain regex. Single-digit milliseconds.</li>
+<li><strong>Fast path.</strong> A read-only allowlist. Never calls the model.</li>
 <li><strong>Jev.</strong> One request, two questions, answered in parallel.</li>
 <li><strong>Thresholds.</strong> Your numbers, from your own log.</li>
 </ol>
-<p>Hard rules come before the model on purpose. In testing, the model was least reliable exactly where a hard rule is easiest to write.</p>
+<p>Denials run before the allowlist, because a command name says nothing about its arguments. Hard rules come before the model on purpose. In testing, the model was least reliable exactly where a hard rule is easiest to write.</p>
 
 <h2>What the attack kit found</h2>
 <table>

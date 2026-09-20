@@ -55,12 +55,14 @@ A real middle setting means asking a second model "is this safe?" before every a
 
 Four steps, and the order is the whole design.
 
-1. **Fast path.** A read-only allowlist. Never calls the model.
-2. **Hard rules.** Deterministic denials in plain regex. Never calls the model. Single-digit milliseconds.
+1. **Hard rules.** Deterministic denials in plain regex. Never calls the model. Single-digit milliseconds.
+2. **Fast path.** A read-only allowlist. Never calls the model.
 3. **Jev.** One request, two questions, answered in parallel.
 4. **Thresholds.** Your numbers, taken from your own observe-mode log.
 
-Hard rules come before the model on purpose. In testing, the model was least reliable exactly where a hard rule is easiest to write.
+Denials run before the allowlist on purpose. A command name says nothing about its arguments: `cat` is harmless until it is `cat ~/.ssh/id_ed25519`. `tests/test_order.py` pins that, because this shipped the wrong way round once.
+
+Hard rules come before the model for a different reason. In testing, the model was least reliable exactly where a hard rule is easiest to write.
 
 It fails open. Any error, timeout or missing key falls back to your harness's normal permission prompt, so a network blip never bricks a session.
 
