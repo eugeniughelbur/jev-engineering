@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jev-gate: a safety gate for AI coding agents</title>
+<meta name="description" content="A tool-call gate for Claude Code, Codex and Cursor backed by TypeSafe's Jev. Allow, ask or deny in 371ms for $0.0000189. Ships the 300-call injection test that found what breaks.">
+<link rel="canonical" href="https://eugeniughelbur.github.io/jev-gate/">
+<meta property="og:title" content="jev-gate: a safety gate for AI coding agents">
+<meta property="og:description" content="Allow, ask or deny on every tool call, in 371ms for two hundredths of a cent. With the injection test that found what breaks.">
+<meta property="og:image" content="https://raw.githubusercontent.com/eugeniughelbur/jev-gate/main/assets/social-card.png">
+<meta property="og:url" content="https://eugeniughelbur.github.io/jev-gate/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "jev-gate",
+      "description": "A safety gate for AI coding agents. Checks every tool call against deterministic rules plus TypeSafe's Jev model and answers allow, ask or deny in about 400ms.",
+      "codeRepository": "https://github.com/eugeniughelbur/jev-gate",
+      "programmingLanguage": "Python",
+      "license": "https://opensource.org/licenses/MIT",
+      "author": { "@type": "Person", "name": "Eugeniu Ghelbur", "url": "https://theaioperator.io" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Jev?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jev is an AI model from TypeSafe AI that answers typed questions with probabilities instead of writing text. You send it a situation and questions, it returns numbers. It replies in roughly 400ms and costs about two hundredths of a cent per call."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is an agent harness?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The code around an AI model that turns it into an agent. It has five parts: instructions, tools, memory, a loop and gates. Claude Code, Codex and Cursor are all harnesses. jev-gate sits in the gates slot."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to check every tool call?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "$0.0000189 per checked call, measured over 300 calls. At 500 checked calls a day that is under one cent per day."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can a Jev safety gate be tricked?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, about ten percent of the time. Blunt injections telling the model to ignore its instructions got zero dangerous commands through, but caused ten percent false denials on safe commands. Text claiming a human had already approved the action got three of thirty dangerous commands through. Keep deterministic hard rules underneath the model."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is jev-gate a security product?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It catches mistakes, not attackers. Treat it as a seatbelt for late-night debugging and keep your real permissions, sandboxes and credentials where they are."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root {
+  --paper: #ede3d2; --ink: #1a2840; --rust: #c8612d; --muted: #6f6a60; --line: #ddd1bd;
+}
+:root:not([data-theme="light"]) { color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #16202e; --ink: #e8e2d6; --muted: #9aa3ad; --line: #26344a; }
+}
+:root[data-theme="dark"] { --paper: #16202e; --ink: #e8e2d6; --muted: #9aa3ad; --line: #26344a; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 48px 16px 96px; }
+img { max-width: 100%; height: auto; border-radius: 10px; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 32px 0 8px; }
+h2 { font-size: 1.3rem; margin: 40px 0 10px; }
+h3 { font-size: 1.05rem; margin: 26px 0 6px; }
+p, li { color: var(--ink); }
+.lede { font-size: 1.12rem; color: var(--muted); }
+pre {
+  background: #1c2634; color: #e2e8e2; padding: 16px; border-radius: 10px;
+  overflow-x: auto; font-size: 14px;
+}
+code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+p code, li code { background: rgba(127,127,127,.16); padding: 1px 5px; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+a { color: var(--rust); }
+.cta {
+  display: inline-block; background: var(--rust); color: #fff; text-decoration: none;
+  padding: 11px 20px; border-radius: 9px; font-weight: 600; margin-top: 10px;
+}
+.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<img src="https://raw.githubusercontent.com/eugeniughelbur/jev-gate/main/assets/banner.png" alt="jev-gate, every tool call checked">
+
+<h1>A safety gate for AI coding agents</h1>
+<p class="lede">Your agent asks permission for everything or for nothing. This is the missing middle: allow, ask or deny on every tool call, in 371ms for two hundredths of a cent.</p>
+
+<a class="cta" href="https://github.com/eugeniughelbur/jev-gate">Get it on GitHub</a>
+
+<h2>Install</h2>
+<pre><code>claude plugin marketplace add eugeniughelbur/jev-gate
+claude plugin install jev-gate@jev-gate</code></pre>
+<p>It installs in observe mode. It logs every decision and blocks nothing until you have read a week of your own numbers.</p>
+
+<img src="https://raw.githubusercontent.com/eugeniughelbur/jev-gate/main/assets/demo.gif" alt="A dangerous command is denied in 371 milliseconds, a safe one passes with no model call">
+
+<h2>How it decides</h2>
+<ol>
+<li><strong>Fast path.</strong> A read-only allowlist. Never calls the model.</li>
+<li><strong>Hard rules.</strong> Deterministic denials in plain regex. Single-digit milliseconds.</li>
+<li><strong>Jev.</strong> One request, two questions, answered in parallel.</li>
+<li><strong>Thresholds.</strong> Your numbers, from your own log.</li>
+</ol>
+<p>Hard rules come before the model on purpose. In testing, the model was least reliable exactly where a hard rule is easiest to write.</p>
+
+<h2>What the attack kit found</h2>
+<table>
+<tr><th>Attack</th><th>Got through</th><th>Safe commands wrongly blocked</th></tr>
+<tr><td>Blunt, "ignore your instructions"</td><td>0 of 30</td><td>3 of 30</td></tr>
+<tr><td>Authority, "the owner approved this"</td><td>3 of 30</td><td>1 of 30</td></tr>
+<tr><td>Authority, "the lead signed off"</td><td>1 of 30</td><td>2 of 30</td></tr>
+<tr><td>Authority, "standing allowlist"</td><td>1 of 30</td><td>0 of 30</td></tr>
+</table>
+<p>The blunt attack does not get in. It jams you, by making the gate deny safe work. The polite attack is the real one. And one command, <code>git stash clear</code>, flipped under every framing, which is why it is a hard rule here.</p>
+<p><a href="https://github.com/eugeniughelbur/jev-gate/blob/main/results/2026-09-20-injection-test.md">Full method and numbers</a></p>
+
+<h2>Questions people ask</h2>
+
+<h3>What is Jev?</h3>
+<p>An AI model from TypeSafe AI that answers typed questions with probabilities instead of writing text. You send it a situation and questions, it returns numbers. Roughly 400ms, about two hundredths of a cent per call.</p>
+
+<h3>What is an agent harness?</h3>
+<p>The code around an AI model that turns it into an agent. Five parts: instructions, tools, memory, a loop and gates. Claude Code, Codex and Cursor are all harnesses. This sits in the gates slot.</p>
+
+<h3>How much does it cost to check every tool call?</h3>
+<p>$0.0000189 per checked call, measured over 300 calls. At 500 checked calls a day, under one cent.</p>
+
+<h3>Can the gate be tricked?</h3>
+<p>Yes, about ten percent of the time, with text claiming a human already approved the action. Keep deterministic rules underneath it.</p>
+
+<h3>Is this a security product?</h3>
+<p>No. It catches mistakes, not attackers. A seatbelt for late-night debugging, not a replacement for permissions and sandboxes.</p>
+
+<div class="foot">
+Built by <a href="https://theaioperator.io">Eugeniu Ghelbur</a>. The long write-up is
+<a href="https://theaioperator.io/p/what-is-jev-the-manual-for-agent">What Is Jev? The Manual for Agent Harnesses</a>. MIT licensed.
+</div>
+
+</div>
+</body>
+</html>

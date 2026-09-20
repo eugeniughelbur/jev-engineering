@@ -1,8 +1,20 @@
+![jev-gate, every tool call checked](assets/banner.png)
+
 # jev-gate: a safety gate for AI coding agents
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-C8612D.svg)](LICENSE)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-1A2840.svg)](#quick-start)
+[![Latency](https://img.shields.io/badge/median-371ms-1A2840.svg)](results/2026-09-20-injection-test.md)
+[![Cost](https://img.shields.io/badge/per%20call-%240.0000189-1A2840.svg)](results/2026-09-20-injection-test.md)
+[![Attack tested](https://img.shields.io/badge/attack%20tested-300%20calls-C8612D.svg)](results/2026-09-20-injection-test.md)
 
 A tool-call gate for Claude Code, Codex, Cursor and anything else you run, backed by [TypeSafe's Jev](https://typesafe.ai/) decision model. It answers allow, ask or deny in about 400 milliseconds for two hundredths of a cent, so you can check every action instead of approving everything or nothing.
 
 It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
+
+![A dangerous command is denied in 371 milliseconds, a safe one passes with no model call](assets/demo.gif)
+
+## Quick start
 
 Two commands in Claude Code:
 
