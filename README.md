@@ -4,6 +4,17 @@ A tool-call gate for Claude Code, Codex, Cursor and anything else you run, backe
 
 It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 
+Two commands in Claude Code:
+
+```bash
+claude plugin marketplace add eugeniughelbur/jev-gate
+claude plugin install jev-gate@jev-gate
+```
+
+Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It installs in observe mode, so it logs every decision and blocks nothing until you say otherwise.
+
+Or run it standalone:
+
 ```bash
 git clone https://github.com/eugeniughelbur/jev-gate
 cd jev-gate
@@ -54,6 +65,16 @@ export JEV_GATE_MODE=observe
 ```
 
 Read `~/.jev-gate/decisions.jsonl` for a week before you turn anything on. That file is the only source of thresholds that will fit your work.
+
+## Three commands
+
+Installed as a plugin, you get:
+
+| Command | What it does |
+|---|---|
+| `/jev-status` | Mode, key, and what the log holds so far. Runs one live check so you can see it work. |
+| `/jev-calibrate` | Reads your week of decisions and hands back your thresholds, your fast-path rules and your hard-rule candidates. |
+| `/jev-attack` | Fires 300 injections at your own gate and reports what got through. |
 
 ## It gets better the longer you run it
 

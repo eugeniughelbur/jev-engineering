@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/jev_gate.py\"",
+            "timeout": 8
+          }
+        ]
+      }
+    ]
+  }
+}

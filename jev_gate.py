@@ -218,6 +218,49 @@ def log(command: str, decision: Decision) -> None:
         pass  # logging must never break a session
 
 
+def last_user_message(transcript_path: str) -> str:
+    """Pull the most recent human turn out of the session transcript.
+
+    Claude Code hands the hook a path, not the message. We read only human
+    turns: the assistant's own reasoning must never reach the gate, or the
+    agent can write its own permission slip.
+    """
+    if not transcript_path:
+        return ""
+    try:
+        lines = Path(transcript_path).read_text().splitlines()
+    except OSError:
+        return ""
+    for line in reversed(lines[-400:]):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if entry.get("type") != "user":
+            continue
+        content = entry.get("message", {}).get("content")
+        if isinstance(content, str) and content.strip():
+            return content.strip()[:2000]
+        if isinstance(content, list):
+            text = " ".join(
+                part.get("text", "")
+                for part in content
+                if isinstance(part, dict) and part.get("type") == "text"
+            ).strip()
+            if text:
+                return text[:2000]
+    return ""
+
+
+def describe(tool: str, tool_input: dict) -> str:
+    """One line describing what the tool is about to do, whatever the tool is."""
+    if command := tool_input.get("command"):
+        return command
+    if path := tool_input.get("file_path"):
+        return f"{tool} {path}"
+    return f"{tool} {json.dumps(tool_input)[:400]}"
+
+
 def main() -> int:
     if len(sys.argv) > 2 and sys.argv[1] == "--explain":
         decision = decide(sys.argv[2])
@@ -230,14 +273,15 @@ def main() -> int:
         return 0  # malformed input, fail open
 
     tool = event.get("tool_name", "Bash")
-    command = event.get("tool_input", {}).get("command", "")
+    tool_input = event.get("tool_input", {}) or {}
+    command = describe(tool, tool_input)
     if not command:
         return 0
 
     decision = decide(
         command,
         tool=tool,
-        user_message=event.get("user_message", ""),
+        user_message=event.get("user_message") or last_user_message(event.get("transcript_path", "")),
         cwd=event.get("cwd", os.getcwd()),
     )
     log(command, decision)
