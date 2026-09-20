@@ -4,3 +4,7 @@ __pycache__/
 results.jsonl
 *.jsonl
 !fixtures/*.json
+.venv/
+*.egg-info/
+build/
+dist/
