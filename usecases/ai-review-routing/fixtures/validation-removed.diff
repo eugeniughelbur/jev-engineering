@@ -1,0 +1,6 @@
+--- a/app/files.py
++++ b/app/files.py
+@@ -8,6 +8,4 @@ def open_upload(root, name):
+-    if ".." in name or name.startswith("/"):
+-        raise ValueError("bad path")
+     return open(os.path.join(root, name), "rb")

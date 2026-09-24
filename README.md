@@ -112,6 +112,12 @@ On a real eight-item transcript, in 347ms for $0.000026, it kept the failing tes
 
 All three are also MCP tools, so an agent can call them itself: `route_turn`, `rank_options`, `keep_context`.
 
+## Use cases
+
+The gate answers one question. [usecases/](usecases/) holds the decisions around it, one folder per situation, each with code, fixtures and measured numbers.
+
+- [When an AI code review must read the whole pull request](usecases/ai-review-routing/). Pattern checks, diff-aware Semgrep and one Jev request with 10 split risk checks decide full or quick. Jev routed all 11 test diffs right at $0.00003 and about 0.3s each. A Haiku version is there for teams that cannot add a vendor.
+
 ## Three commands
 
 Installed as a plugin, you get:

@@ -1,0 +1,5 @@
+--- a/app/cache.py
++++ b/app/cache.py
+@@ -5,3 +5,3 @@ def read(blob):
+-    return json.loads(blob)
++    return pickle.loads(blob)

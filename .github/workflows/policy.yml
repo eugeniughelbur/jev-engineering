@@ -24,6 +24,8 @@ jobs:
         run: uv run tests/test_policy.py
       - name: Decision order
         run: uv run tests/test_order.py
+      - name: Review router fails safe
+        run: uv run tests/test_review_routing.py
       - name: Package builds and installs
         run: |
           # Installed into a venv outside the repo, then run from outside it.

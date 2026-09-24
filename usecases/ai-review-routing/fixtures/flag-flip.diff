@@ -1,0 +1,5 @@
+--- a/config/features.py
++++ b/config/features.py
+@@ -3,3 +3,3 @@
+-ALLOW_PUBLIC_UPLOADS = False
++ALLOW_PUBLIC_UPLOADS = True
