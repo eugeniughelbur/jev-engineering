@@ -61,7 +61,7 @@ The 200-commit Django window ended on 2026-07-06. Django shipped 5 more CVE fixe
 | `Fixed CVE-2026-7666 -- Delayed setting SMTP connection until fully configured` | quick | full, pattern check | full |
 | `Fixed CVE-2026-6873 -- Prevented signed cookie salt namespace collisions` | quick | full, Jev | full |
 
-**Across both sets: 13 CVE fixes, 13 sent to quick by the path rule, 13 sent to full by the content check, and 13 by Jev alone.** The only CVE fix the path rule itself caught, `CVE-2026-15830`, touched a file it knew about.
+**Across both sets, the path rule sent 13 CVE fixes to quick. The content check sent all 13 to full, and so did Jev alone.** The only CVE fix the path rule itself caught, `CVE-2026-15830`, touched a file it knew about.
 
 ## What stayed quick
 
