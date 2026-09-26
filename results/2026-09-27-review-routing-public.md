@@ -1,4 +1,4 @@
-# Review routing on FastAPI, Express and Django: 8 of 8 CVE fixes caught
+# Review routing on FastAPI, Express and Django: 13 of 13 CVE fixes caught
 
 A path rule sent 8 CVE fixes in these three repos to a quick review, because the files had ordinary names. Reading the diff with Jev sent all 8 to a full review. It still let 42% of 561 commits go quick, for $0.029 in Jev across the whole run.
 
@@ -48,6 +48,20 @@ Pattern checks ran first and caught 4, each through a changed line holding a `ra
 I then ran Jev alone on the 4 the pattern checks took. It sent all 4 to full as well. **So Jev by itself caught 8 of 8, and the pattern checks by themselves caught 4 of 8.**
 
 Other security-relevant commits it raised include Django's `Made admin views raise PermissionDenied consistently` and `Omitted inlines without add permission on save-as-new`.
+
+## Holdout: 5 more CVE fixes, rules unchanged
+
+The 200-commit Django window ended on 2026-07-06. Django shipped 5 more CVE fixes on 2026-06-03, just outside it. I ran them after writing everything above, with no rule or threshold changed:
+
+| Commit | Path rule | With content check | Jev alone |
+|---|---|---|---|
+| `Fixed CVE-2026-48587 -- Ignored whitespace padding when checking Vary header values` | quick | full, Jev | full |
+| `Fixed CVE-2026-35193 -- Varied on Authorization when caching non-public responses` | quick | full, Jev | full |
+| `Fixed CVE-2026-8404 -- Used Cache-Control directives case-insensitively` | quick | full, Jev | full |
+| `Fixed CVE-2026-7666 -- Delayed setting SMTP connection until fully configured` | quick | full, pattern check | full |
+| `Fixed CVE-2026-6873 -- Prevented signed cookie salt namespace collisions` | quick | full, Jev | full |
+
+**Across both sets: 13 CVE fixes, 13 sent to quick by the path rule, 13 sent to full by the content check, and 13 by Jev alone.** The only CVE fix the path rule itself caught, `CVE-2026-15830`, touched a file it knew about.
 
 ## What stayed quick
 
