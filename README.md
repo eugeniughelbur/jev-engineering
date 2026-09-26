@@ -12,6 +12,8 @@ A tool-call gate for Claude Code, Codex, Cursor and anything else you run, backe
 
 It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 
+**New:** [review-router](review-router/), a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. On 561 public commits, it let 42% skip and sent all 8 CVE fixes to a full review. [Results](results/2026-09-27-review-routing-public.md).
+
 ![A dangerous command is denied in 371 milliseconds, a safe one passes with no model call](assets/demo.gif)
 
 ## Quick start
@@ -114,9 +116,14 @@ All three are also MCP tools, so an agent can call them itself: `route_turn`, `r
 
 ## Use cases
 
-The gate answers one question. [usecases/](usecases/) holds the decisions around it, one folder per situation, each with code, fixtures and measured numbers.
+The gate answers one question. [usecases/](usecases/) holds the decisions around it, one folder per situation, each with code, examples and measured numbers.
 
-- [When an AI code review must read the whole pull request](usecases/ai-review-routing/). Pattern checks, diff-aware Semgrep and one Jev request with 10 split risk checks decide full or quick. Jev routed all 11 test diffs right at $0.00003 and about 0.3s each. A Haiku version is there for teams that cannot add a vendor.
+| Use case | Result |
+|---|---|
+| [When an AI code review must read the whole pull request](usecases/ai-review-routing/) | On 561 commits from FastAPI, Express and Django, 42% skip the full review and 8 of 8 CVE fixes go to it. One line as a [GitHub Action](review-router/) |
+| [Inbox triage](usecases/inbox-triage/) | 16 of 16 emails sorted right for $0.0003 |
+| [AI writing tells](usecases/ai-writing-tells/) | Names the tell in each flagged paragraph. 2 false alarms in 40 real paragraphs |
+| [Slack follow-ups](usecases/slack-followups/) | 14 of 14 messages sorted right for $0.0002 |
 
 ## Three commands
 

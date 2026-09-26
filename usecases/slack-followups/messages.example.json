@@ -1,0 +1,16 @@
+[
+  {"id": "direct-question", "channel": "#eng", "author": "Priya", "text": "@alex do you know why the staging deploy is pinned to node 18? Want to bump it today.", "you_replied_after": false, "needs_reply": true},
+  {"id": "approval", "channel": "#design", "author": "Marco", "text": "@alex final mockups are in Figma. Can you give a yes/no on the checkout flow before I hand off to eng?", "you_replied_after": false, "needs_reply": true},
+  {"id": "blocked", "channel": "DM", "author": "Jordan", "text": "hey, still need the prod DB read access to finish the report, I'm stuck until then", "you_replied_after": false, "needs_reply": true},
+  {"id": "already-answered", "channel": "#eng", "author": "Sam", "text": "@alex which branch should I rebase on?", "you_replied_after": true, "needs_reply": false},
+  {"id": "fyi-release", "channel": "#announcements", "author": "Lena", "text": "v2.4 is live! Release notes are in the wiki. Thanks everyone.", "you_replied_after": false, "needs_reply": false},
+  {"id": "channel-lunch", "channel": "#random", "author": "Tom", "text": "anyone want tacos? heading out at 12:30", "you_replied_after": false, "needs_reply": false},
+  {"id": "bot-alert", "channel": "#alerts", "author": "Datadog", "text": "[Recovered] p95 latency on api-prod back under 300ms", "you_replied_after": false, "needs_reply": false},
+  {"id": "thanks", "channel": "DM", "author": "Priya", "text": "thanks for the help yesterday, the fix worked!", "you_replied_after": false, "needs_reply": false},
+  {"id": "review-request", "channel": "#eng", "author": "Chen", "text": "@alex PR #812 is ready for your review, it touches the billing code you own", "you_replied_after": false, "needs_reply": true},
+  {"id": "general-question", "channel": "#eng", "author": "Ravi", "text": "does anyone have a good article on Postgres partitioning?", "you_replied_after": false, "needs_reply": false},
+  {"id": "meeting-move", "channel": "DM", "author": "Maria", "text": "can we move our 1:1 to Thursday 3pm? let me know if that works", "you_replied_after": false, "needs_reply": true},
+  {"id": "someone-else", "channel": "#eng", "author": "Priya", "text": "@chen can you look at the flaky test in auth_spec when you get a sec?", "you_replied_after": false, "needs_reply": false},
+  {"id": "customer-escalation", "channel": "#support", "author": "Nina", "text": "@alex Acme says invoices are double-charging since this morning, they're threatening to churn. Need eng eyes ASAP.", "you_replied_after": false, "needs_reply": true},
+  {"id": "standup-note", "channel": "#standup", "author": "Ravi", "text": "yesterday: finished the export job. today: tests. blockers: none", "you_replied_after": false, "needs_reply": false}
+]
