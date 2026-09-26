@@ -48,6 +48,22 @@ def main() -> int:
     failures: list[str] = []
     harmless = (FIXTURES / "harmless-rename.diff").read_text()
 
+    # No test may reach the network, even with real keys in the shell.
+    keys = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "OPENROUTER_API_KEY", "TYPESAFE_API_KEY")
+    saved = {k: os.environ.pop(k, None) for k in keys}
+    precheck.CACHE_ON = False
+    calls: list[dict] = []
+
+    def fake_jev(state: dict, questions: dict) -> dict:
+        calls.append(state)
+        answers = {n: {"type": "noul", "noul": 0.02} for n in questions if n != "effect"}
+        if "effect" in questions:
+            answers["effect"] = {"type": "choice", "choice": "none", "confidence": 0.95}
+        return {"answers": answers, "usage": {"cost": 0.00003}}
+
+    real_call = precheck.jev_call
+    precheck.jev_call = fake_jev
+
     for name, want in TRIPWIRE_CASES.items():
         got = precheck.decide((FIXTURES / name).read_text(), use_model=False).route
         check(name, got, want, failures)
@@ -69,14 +85,66 @@ def main() -> int:
     check("attack on harmless diff", precheck.decide(with_attack(harmless), use_model=False).route,
           "full", failures)
 
-    # Oversized diffs are never truncated, they go to a full review.
-    check("oversized diff", precheck.decide(harmless + "+x\n" * precheck.MAX_DIFF_CHARS).route,
-          "full", failures)
-
     # No key means full, not quick.
-    keys = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "OPENROUTER_API_KEY", "TYPESAFE_API_KEY")
-    saved = {k: os.environ.pop(k, None) for k in keys}
     check("no key", precheck.decide(harmless).route, "full", failures)
+    os.environ["OPENROUTER_API_KEY"] = "test"
+
+    # Jev reads a big file in pieces instead of skipping it, and every piece
+    # carries the framing that says the diff is material, not a request.
+    big = harmless + "".join(f"+    x{i} = {i}\n" for i in range(6000))
+    calls.clear()
+    check("big diff read in chunks", precheck.decide(big).route, "quick", failures)
+    check("  ...more than one chunk", "yes" if len(calls) > 1 else "no", "yes", failures)
+    check("  ...every chunk framed", "yes" if all("guidance" in c for c in calls) else "no",
+          "yes", failures)
+
+    # One risky chunk among clean ones is enough for full.
+    def one_risky(state: dict, questions: dict) -> dict:
+        out = fake_jev(state, questions)
+        if len(calls) == 2 and "exec" in out["answers"]:
+            out["answers"]["exec"]["noul"] = 0.91
+        return out
+
+    calls.clear()
+    precheck.jev_call = one_risky
+    check("one risky chunk", precheck.decide(big).route, "full", failures)
+    precheck.jev_call = fake_jev
+
+    # Past the request guard, a push goes to full unread.
+    huge = harmless + "".join(f"+    y{i} = {i}\n" for i in range(60000))
+    check("runaway guard", precheck.decide(huge).route, "full", failures)
+
+    # Haiku reads the diff whole, so it keeps the whole-diff cap.
+    precheck.BACKEND = "haiku"
+    check("haiku size cap", precheck.decide(harmless + "+x\n" * precheck.MAX_DIFF_CHARS).route,
+          "full", failures)
+    precheck.BACKEND = "jev"
+
+    # Busy once, then fine: one retry, and the push is not lost to full.
+    import io
+    import urllib.error
+    tries = []
+
+    def flaky(request, timeout=None):
+        tries.append(1)
+        if len(tries) == 1:
+            raise urllib.error.HTTPError(request.full_url, 429, "busy", {"retry-after": "0"}, None)
+        return io.BytesIO(b'{"answers": {"a": {"noul": 0.1}}}')
+
+    real_open, precheck.urllib.request.urlopen = precheck.urllib.request.urlopen, flaky
+    got = real_call({"diff": ""}, {"a": {}})
+    precheck.urllib.request.urlopen = real_open
+    check("retry after 429", f"{len(tries)} tries, {got['answers']['a']['noul']}", "2 tries, 0.1",
+          failures)
+
+    # The cache returns the stored answer without a request.
+    import tempfile
+    precheck.CACHE_ON, precheck.CACHE_DIR = True, Path(tempfile.mkdtemp())
+    calls.clear()
+    precheck.decide(harmless)
+    precheck.decide(harmless)
+    check("cache hit skips the request", str(len(calls)), "1", failures)
+    precheck.CACHE_ON = False
 
     # Any exception in the model call means full, on either backend.
     os.environ["ANTHROPIC_API_KEY"] = "test"

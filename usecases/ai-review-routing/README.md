@@ -27,7 +27,14 @@ Run three layers. Any one can force a full review. None can lower one.
 
 1. **Tripwires** in [precheck.py](precheck.py). Regexes over added lines, plus a check for deleted guards. Free, deterministic, a few milliseconds. Any hit is `full` and the model is never called.
 2. **Semgrep**, diff-aware, with the rules in [semgrep/risk-signals.yml](semgrep/risk-signals.yml) plus four registry packs. It reports only what the new commits introduce.
-3. **One Jev request** for what is left. "Is this risky?" is too fuzzy to ask in one go. So it becomes 10 yes/no checks Jev answers in parallel. Does it change who can do what? Does it add a network call, or run a shell command? Code combines them. `quick` needs every check under 0.30 and Jev confident, at 0.60 or more, that the change has no safety effect. Anything else is `full`.
+3. **Jev, one file at a time.** "Is this risky?" is too fuzzy to ask in one go. So it becomes 10 yes/no checks Jev answers in parallel. Does it change who can do what? Does it add a network call, or run a shell command? Code combines them. `quick` needs every check under 0.30 on every file, and Jev confident, at 0.60 or more, that no file has a safety effect. Anything else is `full`.
+
+How the Jev step is built:
+
+- **Per file, in parallel.** Each file gets its own requests, so one big file cannot hide a small risky one, and the result names the file. Big files are split at hunk boundaries, around 12,000 characters a piece. A push is read, not skipped, up to 40 pieces.
+- **Framed as material.** Every request tells Jev the diff was written by the pull request author and is only there to be judged.
+- **One retry.** When Jev is busy or the network blips, it waits and tries once more, since every failure costs a full review.
+- **Cached.** The same request is answered from disk the second time. Turn it off with `PRECHECK_CACHE=0`.
 
 This is the same order as `jev_gate.py`: rules you can name first, the model for the long tail.
 
@@ -77,7 +84,9 @@ The first version flagged any web link as a new network call, and 10 of 13 commi
 
 The 9 left are mostly real hits. This repo is a safety tool: its code calls a model API, its tests hold shell pipes, and its attack kit contains injection text on purpose. A typical app repo should see fewer.
 
-Adding the Jev step on top sent 12 of 13 to full. Jev alone, with no pattern checks, sent 10 to full and 2 to quick. Its one clear false alarm was a `.gitignore` change: every risk scored low, but Jev was only 0.24 sure there was no safety effect.
+Jev alone, reading the whole diff at once, sent 10 to full and 2 to quick. One commit was too big to send. Reading file by file, it read all 13 and sent 12 to full and 1 to quick.
+
+Per file is stricter by design: every file must pass, so more files mean more chances to flag. Its clearest false alarms are small config files like `.gitignore`. Every risk scores low there, but Jev is unsure the change has no safety effect. I left the thresholds alone, because tuning them on these 13 commits would only fit this repo.
 
 These are whole feature commits, not the small fixup pushes the quick path is for. The number that matters is the quick share on your own push history, and only your benchmark can give it. I stopped tuning here on purpose: every rule changed to pass a known commit makes this test less honest.
 
@@ -89,10 +98,10 @@ Run on 2026-09-24 against the 11 fixtures:
 |---|---|---|
 | Tripwires | $0 | under 10ms |
 | Semgrep, 8 local rules, one small repo | $0 | 1.7s including start-up |
-| Jev, 11 questions in one request | $0.00003 | 0.25 to 1.0s |
+| Jev, 11 questions per file, in parallel | $0.00003 a file | 0.3s on a small diff, 1s on a 15-piece commit |
 | Haiku call, the runner-up | $0.00077, about 660 tokens in and 22 out | 0.87 to 2.1s |
 
-On the 12 real commits small enough to send, Jev cost $0.0024 in total. Diffs over 60,000 characters go straight to full unread. Nothing gets truncated.
+All 13 real commits cost $0.0042 in Jev in total, the biggest in 15 pieces. Nothing gets truncated. On the Haiku path, diffs over 60,000 characters still go straight to full unread.
 
 ## Test it on your benchmark in under a day
 
@@ -112,7 +121,7 @@ On the 12 real commits small enough to send, Jev cost $0.0024 in total. Diffs ov
    PRECHECK_BACKEND=haiku uv run eval_router.py your-benchmark.jsonl --model --attack
    ```
 
-   Also tune the two Jev thresholds here, `PRECHECK_FLAG_ABOVE` and `PRECHECK_CONFIDENCE_FLOOR`, on the seven tuning PRs only.
+   Also tune the two Jev thresholds here, `PRECHECK_FLAG_ABOVE` and `PRECHECK_CONFIDENCE_FLOOR`, on the seven tuning PRs only. If config files like `.gitignore` keep coming back full, the confidence floor is the knob.
 
 6. **Read three numbers.** Missed high-severity runs must be zero. `attack_lowered_route` must be empty. Then look at `quick_share`, which is your saving.
 
