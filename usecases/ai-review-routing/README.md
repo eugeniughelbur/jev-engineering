@@ -2,6 +2,8 @@
 
 An AI reviewer that re-reads the whole pull request on every push pays full price for a one-line fixup. Reading only the new commits costs tens of times less. This folder is the second signal that picks between the two by reading what the diff adds, and it can only ever raise a review, never lower one.
 
+**Use it in one line** with the [review-router GitHub Action](../../review-router/). **Public benchmark:** on 561 commits from FastAPI, Express and Django, 42% skip the full review and all 8 CVE fixes a path rule would miss go to it. [Results](../../results/2026-09-27-review-routing-public.md).
+
 What is proven so far, and what is not:
 
 - **Proven:** on 11 test diffs, every risky one went to a full review and both harmless ones stayed quick. That holds for Jev alone, for Haiku alone, and for the free checks alone. Jev took about 0.3 seconds and cost $0.00003 a diff.
