@@ -1,0 +1,6 @@
+--- a/app/utils/strings.py
++++ b/app/utils/strings.py
+@@ -1,2 +1,2 @@
+-def title_case(s):
++def to_title_case(s):
+     return s.title()

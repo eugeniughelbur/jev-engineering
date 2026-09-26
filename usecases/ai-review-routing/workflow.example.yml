@@ -1,0 +1,101 @@
+# Drop-in router step for an AI review workflow. Copy into your repo's
+# .github/workflows/ and wire the last job to your existing review step.
+#
+# Three signals, any one can force a full review, none can lower one:
+#   1. your existing path and event rule
+#   2. Semgrep, diff-aware, only on what the new commits add
+#   3. precheck.py, tripwires then one Jev request
+#      (set PRECHECK_BACKEND=haiku and ANTHROPIC_API_KEY to stay on one vendor)
+#
+# The router code and rules are read from the BASE branch, never from the
+# pull request. Otherwise the author edits precheck.py in the same PR and it
+# says "quick" for everything.
+
+name: ai-review
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      route: ${{ steps.combine.outputs.route }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Your existing rule. It must set `route` (full or quick) and `base`,
+      # the last commit that got a full review.
+      - id: paths
+        run: ./scripts/review-path-rule.sh >> "$GITHUB_OUTPUT"
+
+      - name: Load router from the base branch
+        if: steps.paths.outputs.route == 'quick'
+        run: |
+          mkdir -p /tmp/router/semgrep
+          BASE_REF="origin/${{ github.base_ref }}"
+          for f in precheck.py semgrep/risk-signals.yml; do
+            git show "$BASE_REF:usecases/ai-review-routing/$f" > "/tmp/router/$f"
+          done
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.paths.outputs.route == 'quick'
+
+      - id: semgrep
+        if: steps.paths.outputs.route == 'quick'
+        env:
+          BASE: ${{ steps.paths.outputs.base }}
+        run: |
+          # Semgrep's own managed scans fail open on timeout. This one does
+          # not: any error, any finding, and the answer is full.
+          if uvx semgrep scan --metrics=off --timeout 20 \
+               --config /tmp/router/semgrep/risk-signals.yml \
+               --config p/command-injection --config p/ssrf \
+               --config p/secrets --config p/github-actions \
+               --baseline-commit "$BASE" --json -o /tmp/sg.json; then
+            n=$(python3 -c 'import json;print(len(json.load(open("/tmp/sg.json"))["results"]))')
+            [ "$n" = "0" ] && echo "route=quick" >> "$GITHUB_OUTPUT" || echo "route=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "route=full" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: precheck
+        if: steps.paths.outputs.route == 'quick'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          BASE: ${{ steps.paths.outputs.base }}
+        run: uv run /tmp/router/precheck.py --range "$BASE..HEAD"
+
+      - id: combine
+        run: |
+          # Quick only when every signal that ran said quick. A skipped or
+          # crashed step leaves its output empty, and empty is not quick.
+          if [ "${{ steps.paths.outputs.route }}" = "quick" ] \
+             && [ "${{ steps.semgrep.outputs.route }}" = "quick" ] \
+             && [ "${{ steps.precheck.outputs.route }}" = "quick" ]; then
+            echo "route=quick" >> "$GITHUB_OUTPUT"
+          else
+            echo "route=full" >> "$GITHUB_OUTPUT"
+          fi
+
+  review:
+    needs: route
+    # Runs even if the router job failed, and then reviews in full.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Review
+        env:
+          ROUTE: ${{ needs.route.outputs.route == 'quick' && 'quick' || 'full' }}
+        run: echo "Call your existing claude-code-action step here with ROUTE=$ROUTE"

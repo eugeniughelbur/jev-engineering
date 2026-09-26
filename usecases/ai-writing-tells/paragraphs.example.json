@@ -1,0 +1,14 @@
+[
+  {"id": "ai-fastpaced", "text": "In today's fast-paced digital landscape, businesses must leverage cutting-edge tools to stay ahead. It's not just about efficiency — it's about transformation.", "ai": true},
+  {"id": "ai-delve", "text": "Let's delve into the key factors that make this approach so powerful. By understanding these nuances, you can unlock new levels of productivity and drive meaningful results.", "ai": true},
+  {"id": "ai-tricolon", "text": "The new release is faster. Smarter. More reliable. It isn't merely an update; it's a reimagining of what the product can be.", "ai": true},
+  {"id": "ai-conclusion", "text": "In conclusion, embracing these strategies will empower your team to navigate challenges, foster collaboration, and achieve sustainable growth in an ever-evolving market.", "ai": true},
+  {"id": "ai-hedge", "text": "It's worth noting that results may vary depending on a variety of factors. Ultimately, the best approach will depend on your unique needs and goals.", "ai": true},
+  {"id": "ai-helpful", "text": "Great question! Here's a comprehensive breakdown of everything you need to know about setting up your environment. I hope this helps you on your journey!", "ai": true},
+  {"id": "human-bug", "text": "The build broke on Tuesday because someone bumped the lockfile without running the tests. I reverted it, pinned numpy to 1.26, and the pipeline went green again.", "ai": false},
+  {"id": "human-dash", "text": "We tried three vendors last year. Two of them couldn't export our data at all — which is how we ended up writing our own sync script over a weekend.", "ai": false},
+  {"id": "human-story", "text": "My grandfather kept bees behind the garage. Every August he'd hand me a jar of honey with a strip of comb still in it and tell me not to tell my mother.", "ai": false},
+  {"id": "human-numbers", "text": "Signups fell 12% in March. Most of the drop came from mobile, where the new form hid the password field behind a keyboard on smaller phones.", "ai": false},
+  {"id": "human-opinion", "text": "I don't buy the argument that microservices fixed our scaling problem. We had four engineers and eleven services. Most of our outages were the network between them.", "ai": false},
+  {"id": "human-howto", "text": "Open Settings, pick Billing, then click the small pencil next to your card. If the pencil is grey, your admin has locked payments and you'll need to ask them.", "ai": false}
+]

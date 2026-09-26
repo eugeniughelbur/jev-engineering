@@ -1,0 +1,6 @@
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -12,3 +12,4 @@ jobs:
+     runs-on: ubuntu-latest
++    container:
++      image: ghcr.io/acme/builder:latest

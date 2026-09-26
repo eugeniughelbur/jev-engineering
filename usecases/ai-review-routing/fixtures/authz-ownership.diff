@@ -1,0 +1,5 @@
+--- a/app/services/documents.py
++++ b/app/services/documents.py
+@@ -40,7 +40,7 @@ def can_edit(user, doc):
+-    return doc.owner_id == user.id
++    return doc.owner_id == user.id or doc.shared

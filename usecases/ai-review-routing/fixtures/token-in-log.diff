@@ -1,0 +1,5 @@
+--- a/app/auth_client.py
++++ b/app/auth_client.py
+@@ -20,2 +20,3 @@ def refresh(session):
+     resp = session.post(REFRESH_URL)
++    logger.info("refreshed", extra={"access_token": resp.json()["access_token"]})

@@ -1,0 +1,5 @@
+--- a/README.md
++++ b/README.md
+@@ -3,2 +3,3 @@
+ Install with pip.
++Run the tests with `pytest -q` before opening a pull request.

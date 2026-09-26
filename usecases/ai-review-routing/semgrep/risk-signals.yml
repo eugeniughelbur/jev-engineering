@@ -1,0 +1,122 @@
+# Rules for the risks the registry does not cover well. Pair with registry
+# packs at scan time (p/command-injection, p/ssrf, p/secrets, p/github-actions).
+# Registry rules are fetched, never copied here: their licence allows internal
+# use but not redistribution.
+#
+# These are routing rules, not findings. A hit means "read the whole PR", so
+# they are written for recall and a false hit is cheap.
+
+rules:
+  - id: route.secret-reaches-log
+    languages: [python]
+    severity: WARNING
+    message: A value named like a secret reaches a log or print call.
+    patterns:
+      - pattern-either:
+          - pattern: logging.$F(..., $X, ...)
+          - pattern: $LOG.$F(..., $X, ...)
+          - pattern: print(..., $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(token|secret|password|passwd|api_?key|authorization|cookie).*
+    metadata: { category: secret_exposure }
+
+  - id: route.secret-reaches-log-js
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: A value named like a secret reaches a log call.
+    patterns:
+      - pattern-either:
+          - pattern: console.$F(..., $X, ...)
+          - pattern: $LOG.$F(..., $X, ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^(log|info|warn|error|debug|trace)$
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(token|secret|password|api_?key|authorization|cookie).*
+    metadata: { category: secret_exposure }
+
+  - id: route.flag-default-on
+    languages: [python]
+    severity: WARNING
+    message: A flag or safety default is set to on.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $NAME = True
+              - metavariable-regex: { metavariable: $NAME, regex: (?i).*(enable|allow|bypass|skip|insecure|debug|disable).* }
+          - patterns:
+              - pattern: '{..., $KEY: True, ...}'
+              - metavariable-regex: { metavariable: $KEY, regex: (?i).*(enable|allow|bypass|skip|insecure|debug|disable).* }
+          - pattern: $F(..., default=True, ...)
+    metadata: { category: flag_default }
+
+  - id: route.subprocess-with-input
+    languages: [python]
+    severity: WARNING
+    message: A subprocess is built from a non-literal value.
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$F($CMD, ...)
+          - pattern: os.system($CMD)
+          - pattern: os.popen($CMD, ...)
+      - pattern-not: subprocess.$F("...", ...)
+      - pattern-not: subprocess.$F(["...", ...], ...)
+      - pattern-not: os.system("...")
+    metadata: { category: exec }
+
+  - id: route.unsafe-deserialise
+    languages: [python]
+    severity: WARNING
+    message: Data is deserialised with a loader that can run code.
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+      - pattern: yaml.load($X)
+      - pattern: yaml.unsafe_load(...)
+      - pattern: marshal.loads(...)
+    metadata: { category: deserialize }
+
+  - id: route.ownership-check-changed
+    languages: [python]
+    severity: INFO
+    message: A comparison on an owner, tenant, role or admin field.
+    patterns:
+      - pattern-either:
+          - pattern: $A == $B
+          - pattern: $A != $B
+          - pattern: $A in $B
+          - pattern: $A not in $B
+      - metavariable-regex:
+          metavariable: $A
+          regex: (?i).*(owner|tenant|user_?id|role|admin|permission|org_?id).*
+    metadata: { category: authz }
+
+  - id: route.ownership-check-changed-js
+    languages: [javascript, typescript]
+    severity: INFO
+    message: A comparison on an owner, tenant, role or admin field.
+    patterns:
+      - pattern-either:
+          - pattern: $A == $B
+          - pattern: $A != $B
+          - pattern: $A === $B
+          - pattern: $A !== $B
+      - metavariable-regex:
+          metavariable: $A
+          regex: (?i).*(owner|tenant|user_?id|role|admin|permission|org_?id).*
+    metadata: { category: authz }
+
+  - id: route.mutable-image-in-ci
+    languages: [yaml]
+    severity: WARNING
+    message: A CI step or service uses a container image by a mutable tag. A pinned action that builds from it pins nothing.
+    patterns:
+      - pattern-either:
+          - pattern: 'image: $IMG'
+          - pattern: 'uses: $IMG'
+      - metavariable-regex:
+          metavariable: $IMG
+          regex: (?i)^(docker://)?[\w./-]+(:(latest|main|master|stable|edge|nightly))?$
+    metadata: { category: ci_supply_chain }

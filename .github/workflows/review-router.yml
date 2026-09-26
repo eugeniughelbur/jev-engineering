@@ -1,0 +1,72 @@
+name: review-router
+
+# Runs the published action the way a user would, so a change that breaks
+# `uses: eugeniughelbur/jev-engineering/review-router@v1` fails here first.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    # Free checks only, no key needed. Every risky fixture must route full,
+    # every harmless one quick.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case:
+          - { diff: authz-ownership, want: full }
+          - { diff: outbound-http, want: full }
+          - { diff: shell-from-input, want: full }
+          - { diff: deserialize, want: full }
+          - { diff: flag-flip, want: full }
+          - { diff: token-in-log, want: full }
+          - { diff: mutable-image, want: full }
+          - { diff: injection-comment, want: full }
+          - { diff: validation-removed, want: full }
+          - { diff: harmless-rename, want: quick }
+          - { diff: harmless-docs, want: quick }
+    steps:
+      - uses: actions/checkout@v4
+      - id: router
+        uses: ./review-router
+        with:
+          diff-file: usecases/ai-review-routing/fixtures/${{ matrix.case.diff }}.diff
+          model: "false"
+          semgrep: "false"
+      - name: Check the route
+        env:
+          GOT: ${{ steps.router.outputs.route }}
+          WANT: ${{ matrix.case.want }}
+        run: |
+          echo "${{ matrix.case.diff }}: got $GOT, want $WANT"
+          [ "$GOT" = "$WANT" ]
+
+  on-this-pr:
+    # The whole path on a real pull request: commit range, Semgrep, Jev when
+    # a key is set. Without a key it must still answer, and answer full.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - id: router
+        uses: ./review-router
+        with:
+          openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          full-on-new-pr: "false"
+      - name: Show the route
+        env:
+          ROUTE: ${{ steps.router.outputs.route }}
+          SOURCE: ${{ steps.router.outputs.source }}
+        run: |
+          echo "route=$ROUTE source=$SOURCE"
+          [ "$ROUTE" = "full" ] || [ "$ROUTE" = "quick" ]
