@@ -70,3 +70,18 @@ jobs:
         run: |
           echo "route=$ROUTE source=$SOURCE"
           [ "$ROUTE" = "full" ] || [ "$ROUTE" = "quick" ]
+
+  published-v1:
+    # The one-line install exactly as a stranger uses it: the tag, not the
+    # local copy. Catches a bad tag or a path that only works in this repo.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: router
+        uses: eugeniughelbur/jev-engineering/review-router@v1
+        with:
+          diff-file: usecases/ai-review-routing/fixtures/token-in-log.diff
+          model: "false"
+          semgrep: "false"
+      - run: '[ "${{ steps.router.outputs.route }}" = "full" ]'
