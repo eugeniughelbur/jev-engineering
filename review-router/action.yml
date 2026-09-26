@@ -1,0 +1,160 @@
+name: Jev review router
+description: >
+  Decide whether an AI code review must read the whole pull request or only the
+  new commits, by reading what the diff adds. It can only raise a review.
+author: Eugeniu Ghelbur
+branding:
+  icon: git-pull-request
+  color: orange
+
+inputs:
+  backend:
+    description: "jev (default, needs openrouter-api-key) or haiku (needs anthropic-api-key)"
+    default: jev
+  openrouter-api-key:
+    description: OpenRouter key for Jev. A TypeSafe key works too.
+    default: ""
+  anthropic-api-key:
+    description: Anthropic key, only for backend haiku.
+    default: ""
+  base:
+    description: >
+      Last commit that got a full review. Default: the previous head on a
+      synchronize event, else the pull request base.
+    default: ""
+  head:
+    description: "Commit to route. Default: the pull request head."
+    default: ""
+  semgrep:
+    description: Also run diff-aware Semgrep. Any finding or error means full.
+    default: "true"
+  model:
+    description: Call the model. false runs the free checks only.
+    default: "true"
+  full-on-new-pr:
+    description: Route full on opened, reopened and ready_for_review, without reading.
+    default: "true"
+  diff-file:
+    description: Route this diff file instead of a commit range. For tests.
+    default: ""
+
+outputs:
+  route:
+    description: "full or quick"
+    value: ${{ steps.combine.outputs.route }}
+  source:
+    description: What decided it
+    value: ${{ steps.combine.outputs.source }}
+  categories:
+    description: Comma-separated risk categories found
+    value: ${{ steps.precheck.outputs.categories }}
+
+runs:
+  using: composite
+  steps:
+    - id: range
+      shell: bash
+      env:
+        IN_BASE: ${{ inputs.base }}
+        IN_HEAD: ${{ inputs.head }}
+        ACTION: ${{ github.event.action }}
+        BEFORE: ${{ github.event.before }}
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        NEW_PR_FULL: ${{ inputs.full-on-new-pr }}
+        DIFF_FILE: ${{ inputs.diff-file }}
+      run: |
+        if [ -n "$DIFF_FILE" ]; then echo "mode=file" >> "$GITHUB_OUTPUT"; exit 0; fi
+        case "$ACTION" in opened|reopened|ready_for_review)
+          if [ "$NEW_PR_FULL" = "true" ]; then echo "mode=new-pr" >> "$GITHUB_OUTPUT"; exit 0; fi;;
+        esac
+        HEAD="${IN_HEAD:-${PR_HEAD:-$GITHUB_SHA}}"
+        BASE="$IN_BASE"
+        if [ -z "$BASE" ]; then
+          if [ "$ACTION" = "synchronize" ] && [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            BASE="$BEFORE"
+          else
+            BASE="$PR_BASE"
+          fi
+        fi
+        if [ -z "$BASE" ]; then echo "mode=unknown" >> "$GITHUB_OUTPUT"; exit 0; fi
+        for sha in "$BASE" "$HEAD"; do
+          git cat-file -e "$sha^{commit}" 2>/dev/null || git fetch --no-tags --quiet origin "$sha" || true
+        done
+        if git cat-file -e "$BASE^{commit}" 2>/dev/null && git cat-file -e "$HEAD^{commit}" 2>/dev/null; then
+          echo "mode=range" >> "$GITHUB_OUTPUT"
+        else
+          echo "mode=unknown" >> "$GITHUB_OUTPUT"
+        fi
+        echo "base=$BASE" >> "$GITHUB_OUTPUT"
+        echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+    - uses: astral-sh/setup-uv@v5
+      if: inputs.backend == 'haiku' && inputs.model == 'true'
+
+    - id: precheck
+      if: steps.range.outputs.mode == 'range' || steps.range.outputs.mode == 'file'
+      shell: bash
+      env:
+        PRECHECK_BACKEND: ${{ inputs.backend }}
+        OPENROUTER_API_KEY: ${{ inputs.openrouter-api-key }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        PRECHECK_CACHE: "0"
+        ROUTER: ${{ github.action_path }}/../usecases/ai-review-routing/precheck.py
+        MODE: ${{ steps.range.outputs.mode }}
+        RANGE: ${{ steps.range.outputs.base }}..${{ steps.range.outputs.head }}
+        DIFF_FILE: ${{ inputs.diff-file }}
+        MODEL: ${{ inputs.model }}
+      run: |
+        # The router runs from this action's own pinned copy, never from the
+        # pull request, so the author cannot edit it into saying "quick".
+        args=()
+        [ "$MODE" = "file" ] && args+=(--diff-file "$DIFF_FILE") || args+=(--range "$RANGE")
+        [ "$MODEL" = "true" ] || args+=(--no-model)
+        if [ "$PRECHECK_BACKEND" = "haiku" ] && [ "$MODEL" = "true" ]; then
+          uv run --quiet "$ROUTER" "${args[@]}" || echo "route=full" >> "$GITHUB_OUTPUT"
+        else
+          python3 "$ROUTER" "${args[@]}" || echo "route=full" >> "$GITHUB_OUTPUT"
+        fi
+
+    - id: semgrep
+      if: inputs.semgrep == 'true' && steps.range.outputs.mode == 'range'
+      shell: bash
+      env:
+        RULES: ${{ github.action_path }}/../usecases/ai-review-routing/semgrep/risk-signals.yml
+        BASE: ${{ steps.range.outputs.base }}
+      run: |
+        # Semgrep's managed scans fail open on timeout. This one does not.
+        pipx run --quiet semgrep scan --metrics=off --timeout 20 --quiet \
+          --config "$RULES" --config p/command-injection --config p/ssrf \
+          --config p/secrets --config p/github-actions \
+          --baseline-commit "$BASE" --json -o /tmp/jev-router-semgrep.json 2>/dev/null \
+          && n=$(python3 -c 'import json;print(len(json.load(open("/tmp/jev-router-semgrep.json"))["results"]))') \
+          || n=error
+        echo "findings=$n" >> "$GITHUB_OUTPUT"
+        if [ "$n" = "0" ]; then echo "route=quick" >> "$GITHUB_OUTPUT"; else echo "route=full" >> "$GITHUB_OUTPUT"; fi
+        if [ "$n" != "0" ]; then echo "Semgrep: \`$n\` finding(s) on the new commits" >> "$GITHUB_STEP_SUMMARY"; fi
+
+    - id: combine
+      shell: bash
+      env:
+        MODE: ${{ steps.range.outputs.mode }}
+        PRECHECK: ${{ steps.precheck.outputs.route }}
+        PRECHECK_SOURCE: ${{ steps.precheck.outputs.source }}
+        SEMGREP: ${{ steps.semgrep.outputs.route }}
+        SEMGREP_ON: ${{ inputs.semgrep == 'true' && steps.range.outputs.mode == 'range' }}
+      run: |
+        # Quick only when every check that should have run said quick. A
+        # skipped or crashed step leaves its output empty, and empty is full.
+        route=full; source="$MODE"
+        if [ "$MODE" = "range" ] || [ "$MODE" = "file" ]; then
+          source="${PRECHECK_SOURCE:-error}"
+          if [ "$PRECHECK" = "quick" ]; then
+            if [ "$SEMGREP_ON" != "true" ] || [ "$SEMGREP" = "quick" ]; then route=quick; else source=semgrep; fi
+          fi
+        fi
+        [ "$MODE" = "new-pr" ] && echo "### Review router: Full review (new pull request)" >> "$GITHUB_STEP_SUMMARY"
+        [ "$MODE" = "unknown" ] && echo "### Review router: Full review (could not find the commit range)" >> "$GITHUB_STEP_SUMMARY"
+        echo "route=$route" >> "$GITHUB_OUTPUT"
+        echo "source=$source" >> "$GITHUB_OUTPUT"
+        echo "Route: $route ($source)"

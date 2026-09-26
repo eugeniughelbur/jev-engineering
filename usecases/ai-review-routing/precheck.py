@@ -509,9 +509,23 @@ def decide(diff: str, use_model: bool = True) -> Route:
         return Route("full", "error", hits=[type(exc).__name__])
 
 
+def summary(result: Route) -> str:
+    """Markdown for the GitHub job summary, so the route is visible on the run."""
+    verdict = "Full review" if result.route == "full" else "Quick review"
+    lines = [f"### Review router: {verdict}", "", f"Decided by: `{result.source}`"]
+    if result.categories:
+        lines.append(f"Risks: {', '.join(f'`{c}`' for c in result.categories)}")
+    if result.hits:
+        lines += ["", "| Signal |", "|---|"] + [f"| `{h}` |" for h in result.hits]
+    if result.cost_usd:
+        lines += ["", f"Jev cost: ${result.cost_usd:.6f}"]
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("--range", help="git commit range, e.g. BASE..HEAD. Default: read stdin")
+    p.add_argument("--diff-file", help="read the diff from this file instead")
     p.add_argument("--no-model", action="store_true", help="tripwires and size cap only")
     args = p.parse_args()
 
@@ -521,6 +535,8 @@ def main() -> int:
                 ["git", "diff", "--no-color", "--unified=3", args.range],
                 check=True, capture_output=True, text=True,
             ).stdout
+        elif args.diff_file:
+            diff = Path(args.diff_file).read_text()
         else:
             diff = sys.stdin.read()
         result = decide(diff, use_model=not args.no_model)
@@ -532,7 +548,12 @@ def main() -> int:
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
         with open(out, "a") as f:
-            f.write(f"route={result.route}\nsource={result.source}\n")
+            f.write(f"route={result.route}\nsource={result.source}\n"
+                    f"categories={','.join(result.categories)}\n")
+    step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step_summary:
+        with open(step_summary, "a") as f:
+            f.write(summary(result))
     return 0
 
 
