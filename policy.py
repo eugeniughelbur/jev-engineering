@@ -68,6 +68,8 @@ EMBEDDED: dict = {
         {"pattern": r":\(\)\s*\{\s*:\|:&\s*\}\s*;:", "reason": "fork bomb"},
         {"pattern": r"\bhistory\b.*\|\s*(curl|wget|nc)\b", "reason": "exfiltrates shell history"},
         {"pattern": r"\bcurl\b[^|]*\|\s*(ba)?sh\b", "reason": "pipes a remote script into a shell"},
+        {"pattern": r"(~|\$HOME|/Users/[^/\s]+|/home/[^/\s]+)/\.(aws/credentials|config/gcloud/|kube/config|docker/config\.json|netrc|git-credentials)", "reason": "reads cloud or registry credentials"},
+        {"pattern": r"\b(env|printenv)\b[^|;&]*\|\s*(curl|wget|nc|ncat)\b", "reason": "sends your environment, and every secret in it, over the network"},
     ],
     "questions": {
         "destructive": {
