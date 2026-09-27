@@ -5,7 +5,7 @@ The same gate and the same rules run in every agent. Only the wiring changes. Se
 | Agent | How it plugs in | Tested |
 |---|---|---|
 | Claude Code | The plugin, `claude plugin install jev-engineering@jev-engineering` | Yes, in live sessions |
-| Codex | A `PreToolUse` hook, same format as Claude Code | Hook output tested offline. A live Codex run is still to do |
+| Codex | A `PreToolUse` hook, same format as Claude Code | Yes, live in Codex 0.144.6 on 2026-09-28: `git status` and `ls` ran with no prompt, a private-key read was blocked |
 | Cursor | A `beforeShellExecution` hook with `--agent cursor` | Output tested offline, not yet inside Cursor |
 | OpenCode | A plugin on the `permission.ask` hook | Written from the docs, not yet run |
 
@@ -13,7 +13,7 @@ Every adapter fails open. If the gate errors, times out or has no key, the agent
 
 ## Codex
 
-Copy [codex/hooks.json](codex/hooks.json) to `~/.codex/hooks.json`, or merge it into an existing one. Hooks in a project's own `.codex/` folder only load once you trust that project, so the user-level file is the reliable place.
+Copy [codex/hooks.json](codex/hooks.json) to `~/.codex/hooks.json`. If you already have one, add the `PreToolUse` block inside its `hooks` object, next to what is there. Hooks in a project's own `.codex/` folder only load once you trust that project, so the user-level file is the reliable place.
 
 ## Cursor
 

@@ -1,15 +1,17 @@
 {
-  "PreToolUse": [
-    {
-      "matcher": "Bash",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python3 /absolute/path/to/jev-engineering/jev_gate.py",
-          "statusMessage": "jev-gate",
-          "timeout": 10
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /absolute/path/to/jev-engineering/jev_gate.py",
+            "statusMessage": "jev-gate",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }
