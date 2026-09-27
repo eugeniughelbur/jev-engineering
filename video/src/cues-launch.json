@@ -4,77 +4,80 @@
   "fps": 30,
   "pre": 0.6,
   "duration": 30,
-  "scene": { "problem": 0, "reveal": 4, "how": 8, "jev": 15, "bench": 20, "outro": 26, "end": 30 },
-  "labels": { "problem": "01 / 06", "reveal": "02 / 06", "how": "03 / 06", "jev": "04 / 06", "bench": "05 / 06", "outro": "06 / 06" },
+  "scene": { "pain": 0, "options": 4, "reveal": 8, "demo": 11, "proof": 19, "trust": 24, "outro": 27, "end": 30 },
+  "labels": { "pain": "01 / 07", "options": "02 / 07", "reveal": "03 / 07", "demo": "04 / 07", "proof": "05 / 07", "trust": "06 / 07", "outro": "07 / 07" },
 
-  "problem": {
-    "words": [[0.4, "Coding"], [0.65, "agents"], [0.9, "ask"], [1.15, "permission"], [1.9, "for"], [2.15, "every"], [2.4, "single"], [2.65, "command."]],
+  "pain": {
+    "words": [[0.35, "Your"], [0.6, "agent"], [0.85, "asks"], [1.1, "\"Allow?\""], [1.8, "before"], [2.05, "almost"], [2.3, "every"], [2.55, "command."]],
     "prompts": [0.6, 0.85, 1.1, 1.35, 1.6, 1.85, 2.1, 2.3, 2.5, 2.65, 2.8, 2.95, 3.05, 3.15, 3.25, 3.35],
     "implode": 3.55
   },
 
+  "options": {
+    "title": 4.1,
+    "left": 4.6,
+    "right": 5.6,
+    "boom": 6.9,
+    "caption": 7.2
+  },
+
   "reveal": {
-    "logo": 4.0,
-    "tagline": 4.75,
-    "shrink": 5.5,
-    "type_start": 5.9,
-    "type_end": 6.9,
-    "output": 7.15
+    "logo": 8.0,
+    "tagline": 8.7
   },
 
-  "how": {
-    "steps": [8.25, 9.75, 11.25, 12.75],
-    "cmds": [
-      [8.6, "cat ~/.ssh/id_ed25519", 1, "deny"],
-      [10.1, "git status", 2, "allow"],
-      [11.6, "git push --force origin main", 3, "ask"]
+  "demo": {
+    "rows": [
+      [11.4, "npm test", "ran"],
+      [12.0, "ls src/", "ran"],
+      [12.6, "git diff", "ran"],
+      [13.2, "mkdir -p build", "ran"],
+      [14.0, "cat ~/.ssh/id_ed25519", "blocked"],
+      [15.0, "git status", "ran"],
+      [15.8, "git push --force origin main", "asks"]
     ],
-    "thresholds": 13.1
+    "prompt": 16.4
   },
 
-  "jev": {
-    "chip": 15.0,
-    "count_from": 15.3,
-    "count_to": 18.3,
-    "orbit": [16.0, 16.3, 16.6, 16.9, 17.2],
-    "title": 17.6
+  "proof": {
+    "title": 19.25,
+    "bars": 19.8,
+    "slam": 21.3,
+    "caption": 22.0,
+    "fine": 22.6
   },
 
-  "bench": {
-    "title": 20.25,
-    "bars": 21.0,
-    "slam": 22.5,
-    "caption": 23.25,
-    "fine": 24.0
+  "trust": {
+    "items": [24.2, 24.7, 25.2, 25.7]
   },
 
   "outro": {
-    "logo": 26.0,
-    "tagline": 26.5,
-    "type_start": 27.0,
-    "type_end": 28.8,
-    "meta": 29.0
+    "logo": 27.0,
+    "type_start": 27.5,
+    "type_end": 28.7,
+    "meta": 28.9
   },
 
   "hits": [
-    [0.4, "tick"], [0.65, "tick"], [0.9, "tick"], [1.15, "tick"], [1.9, "tick"], [2.15, "tick"], [2.4, "tick"], [2.65, "tick"],
+    [0.35, "tick"], [0.6, "tick"], [0.85, "tick"], [1.1, "tick"], [1.8, "tick"], [2.05, "tick"], [2.3, "tick"], [2.55, "tick"],
     [3.55, "thud"],
-    [4.0, "boom"], [4.75, "chime", 660], [7.15, "thud"],
-    [8.25, "tick"], [9.1, "thud"], [9.75, "tick"], [10.6, "chime", 880], [11.25, "tick"], [12.3, "thud"], [12.75, "tick"],
-    [15.0, "chime", 523.25], [17.6, "chime", 784],
-    [21.0, "tick"], [22.5, "boom"], [23.25, "chime", 990],
-    [26.0, "chime", 523.25], [29.0, "chime", 784]
+    [4.6, "tick"], [5.6, "tick"], [6.9, "boom"],
+    [8.0, "chime", 660],
+    [11.4, "tick"], [12.0, "tick"], [12.6, "tick"], [13.2, "tick"], [14.0, "thud"], [15.0, "tick"], [15.8, "chime", 880],
+    [19.8, "tick"], [21.3, "boom"], [22.0, "chime", 990],
+    [24.2, "tick"], [24.7, "tick"], [25.2, "tick"], [25.7, "tick"],
+    [27.0, "chime", 523.25], [28.9, "chime", 784]
   ],
-  "typing": [5.9, 6.9, 45],
+  "typing": [27.5, 28.7, 60],
 
   "music": {
     "chords": ["Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "G", "Am", "F", "C", "Am"],
     "drums_in": 4.0,
-    "hats_in": 8.0,
-    "break": [19.5, 20.0],
-    "drop": 20.0,
+    "hats_in": 11.0,
+    "break": [18.5, 19.0],
+    "drop": 19.0,
     "drums_out": 27.0,
-    "risers": [[2.0, 4.0], [18.0, 20.0]],
-    "booms": [4.0, 22.5]
+    "risers": [[2.0, 4.0], [6.0, 8.0], [17.0, 19.0]],
+    "booms": [8.0, 21.3]
   }
 }
