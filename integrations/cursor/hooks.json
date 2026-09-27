@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "python3 /absolute/path/to/jev-engineering/jev_gate.py --agent cursor",
+        "timeout": 10
+      }
+    ]
+  }
+}

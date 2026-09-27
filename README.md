@@ -302,9 +302,9 @@ Add to `.claude/settings.json`:
 
 The hook receives the proposed call on stdin, exits 0 to permit and exits 2 to block.
 
-### Codex
+### Codex, Cursor and OpenCode
 
-Same script, wired to the approval hook. Pass the user's own prompt as the authorization evidence, which is what `user_message` in the event is for.
+Setup files and the test status for each are in [integrations/](integrations/). Codex uses the same hook format as Claude Code. Cursor gets its own output format with `--agent cursor`. OpenCode gets a plugin.
 
 ### Cursor, and any MCP client
 

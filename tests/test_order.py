@@ -85,6 +85,18 @@ def main() -> int:
         if not ok:
             failures.append(f"auto mode {tool} {command}: wanted {want}, got {got} (exit {run.returncode})")
 
+    # Cursor reads {"permission": ...} and nothing when the gate is unsure.
+    for command, want in [("git status", "allow"), ("cat ~/.ssh/id_ed25519", "deny"),
+                          ("git push --force origin main", "prompt")]:
+        run = subprocess.run([sys.executable, gate, "--agent", "cursor"],
+                             input=json.dumps({"command": command, "cwd": "/tmp"}),
+                             capture_output=True, text=True, env=env)
+        got = json.loads(run.stdout)["permission"] if run.stdout.strip() else "prompt"
+        ok = got == want and run.returncode == 0
+        print(f"{'pass' if ok else 'FAIL'}  cursor: {command[:40]:42} {got}")
+        if not ok:
+            failures.append(f"cursor {command}: wanted {want}, got {got}")
+
     # The layer primitives must keep their shape, since callers branch on it.
     check_shape = [
         ("route tiers are ordered cheapest first", list(DEFAULT_TIERS)[0] == "fast"),

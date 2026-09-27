@@ -314,6 +314,20 @@ def stats() -> int:
     return 0
 
 
+def action_for(decision: Decision, tool: str) -> str:
+    """allow, deny or prompt, for the mode in force. Every agent adapter
+    below turns this into its own format, so the rules live in one place."""
+    if MODE == "auto":
+        if decision.verdict == "allow" and tool in AUTO_TOOLS:
+            return "allow"
+        return "deny" if decision.verdict == "deny" else "prompt"
+    if MODE == "guard":
+        return "deny" if decision.verdict == "deny" else "prompt"
+    if MODE == "enforce":
+        return "deny" if decision.verdict in ("deny", "ask") else "prompt"
+    return "prompt"  # observe: log only, change nothing
+
+
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--stats":
         return stats()
@@ -321,14 +335,19 @@ def main() -> int:
         decision = decide(sys.argv[2])
         print(json.dumps(decision.__dict__, indent=2))
         return 0
+    # Claude Code and Codex share one hook format. Cursor has its own.
+    agent = sys.argv[sys.argv.index("--agent") + 1] if "--agent" in sys.argv[:-1] else "claude"
 
     try:
         event = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         return 0  # malformed input, fail open
 
-    tool = event.get("tool_name", "Bash")
-    tool_input = event.get("tool_input", {}) or {}
+    if agent == "cursor":
+        tool, tool_input = "Bash", {"command": event.get("command", "")}
+    else:
+        tool = event.get("tool_name", "Bash")
+        tool_input = event.get("tool_input", {}) or {}
     command = describe(tool, tool_input)
     if not command:
         return 0
@@ -340,23 +359,26 @@ def main() -> int:
         cwd=event.get("cwd", os.getcwd()),
     )
     log(command, decision, tool)
+    action = action_for(decision, tool)
 
-    if MODE == "observe":
-        return 0  # log only, change nothing
-    if MODE == "auto":
-        # Clearly safe: approve it, so its prompt never appears. Clearly
-        # dangerous: block it with the reason. Anything else, including every
-        # error and missing key, gets the normal prompt.
-        if decision.verdict == "allow" and tool in AUTO_TOOLS:
-            hook_answer("allow", decision.reason)
-        elif decision.verdict == "deny":
-            hook_answer("deny", decision.reason)
+    if agent == "cursor":
+        # Cursor reads {"permission": ...}. Printing nothing leaves its own
+        # prompt in charge, which is what "prompt" means.
+        if action != "prompt":
+            print(json.dumps({
+                "permission": action,
+                "user_message": f"jev-gate: {decision.reason}",
+                "agent_message": f"jev-gate: {decision.reason}",
+            }))
         return 0
-    if decision.verdict == "deny" and MODE in ("guard", "enforce"):
-        print(f"blocked by jev-gate: {decision.reason}", file=sys.stderr)
-        return 2
-    if decision.verdict == "ask" and MODE == "enforce":
-        print(f"jev-gate wants a human: {decision.reason}", file=sys.stderr)
+
+    if action == "allow":
+        hook_answer("allow", decision.reason)
+    elif action == "deny" and MODE == "auto":
+        hook_answer("deny", decision.reason)
+    elif action == "deny":
+        why = "wants a human" if decision.verdict == "ask" else "blocked"
+        print(f"jev-gate {why}: {decision.reason}", file=sys.stderr)
         return 2
     return 0
 
