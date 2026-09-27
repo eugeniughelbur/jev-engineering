@@ -464,19 +464,21 @@ const Bench: React.FC<{ t: number }> = ({ t }) => {
   const a = sceneAlpha(t, S.bench, S.outro, 0.2);
   const grow = ramp(t, B.bars, 1.1, easeOut);
   const slam = pop(t, B.slam, 0.35);
-  const chatW = 1000 * grow;
-  const jevW = Math.max(6, 1000 * (0.00945 / 15) * grow);
+  const before = 3622;
+  const after = 1226;
+  const beforeW = 1000 * grow;
+  const afterW = 1000 * (after / before) * grow;
   const shards = Array.from({ length: 16 }, (_, i) => i);
   return (
     <div style={{ ...abs, inset: 0, opacity: a }}>
-      <div style={{ ...abs, left: 120, top: 130, ...mono(16, K.soft, { letterSpacing: 3 }) }}>COST OF CHECKING 500 AGENT ACTIONS A DAY</div>
+      <div style={{ ...abs, left: 120, top: 130, ...mono(16, K.soft, { letterSpacing: 3 }) }}>3,622 COMMANDS CLAUDE CODE REALLY RAN FOR ME</div>
       <div style={{ ...abs, left: 120, top: 175, ...bold(64, K.ink), opacity: ramp(t, B.title, 0.3) }}>
-        Asking a chat model "is this safe?" vs asking <span style={{ color: K.rust }}>Jev</span>.
+        Permission prompts, <span style={{ color: K.rust }}>before and after</span>.
       </div>
       <div style={{ ...abs, left: 500, top: 360, width: 2, height: 330, background: K.ink }} />
       {[
-        ["Chat model", "about 3¢ and 4s a call", chatW, K.ink, "$15.00"],
-        ["Jev", "$0.0000189 and 371ms a call", jevW, K.rust, "$0.0095"],
+        ["Without jev-gate", "every command asks", beforeW, K.ink, Math.round(before * grow).toLocaleString("en-US")],
+        ["With auto mode", "only the unclear ones ask", afterW, K.rust, Math.round(after * grow).toLocaleString("en-US")],
       ].map(([name, sub, w, col, val], i) => (
         <div key={name as string} style={{ ...abs, left: 120, top: 400 + i * 150, display: "flex", alignItems: "center" }}>
           <div style={{ width: 380 }}>
@@ -487,8 +489,8 @@ const Bench: React.FC<{ t: number }> = ({ t }) => {
           <div style={{ ...bold(62, i ? K.rust : K.ink, { fontFamily: MONO, fontWeight: 700, letterSpacing: -1 }), marginLeft: 26, opacity: clamp(grow * 2) }}>{val as string}</div>
         </div>
       ))}
-      <div style={{ ...abs, left: 1300, top: 610, transform: `translate(-50%,-50%) scale(${slam}) rotate(-4deg)`, opacity: clamp(slam * 3), ...bold(112, K.rust), whiteSpace: "nowrap" }}>
-        ~1,500× cheaper
+      <div style={{ ...abs, left: 1400, top: 318, transform: `translate(-50%,-50%) scale(${slam}) rotate(-3deg)`, opacity: clamp(slam * 3), ...bold(96, K.rust), whiteSpace: "nowrap" }}>
+        66% fewer prompts
       </div>
       {shards.map((i) => {
         const p = clamp((t - B.slam) / 0.9);
@@ -496,14 +498,14 @@ const Bench: React.FC<{ t: number }> = ({ t }) => {
         const ang = (i / shards.length) * Math.PI * 2;
         const d = 120 + 420 * easeOut(p);
         return (
-          <div key={i} style={{ ...abs, left: 1300 + Math.cos(ang) * d, top: 610 + Math.sin(ang) * d * 0.6 + p * p * 120, width: 18, height: 18, background: i % 3 ? K.ink : K.rust, transform: `rotate(${ang * 90 + p * 300}deg)`, opacity: 1 - p }} />
+          <div key={i} style={{ ...abs, left: 1400 + Math.cos(ang) * d, top: 318 + Math.sin(ang) * d * 0.5 + p * p * 120, width: 18, height: 18, background: i % 3 ? K.ink : K.rust, transform: `rotate(${ang * 90 + p * 300}deg)`, opacity: 1 - p }} />
         );
       })}
-      <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", opacity: ramp(t, B.caption, 0.35), ...bold(56, K.ink) }}>
-        Cheap enough to <span style={{ color: K.rust }}>check everything</span>.
+      <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", opacity: ramp(t, B.caption, 0.35), ...bold(52, K.ink) }}>
+        Not one <span style={{ color: K.rust }}>rm, git push or sudo</span> was auto-approved.
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 900, textAlign: "center", opacity: ramp(t, B.fine, 0.4), ...mono(17, K.soft) }}>
-        Chat model: the README's estimate of about 3¢ and 4s per call. Jev: $0.0000189 and 371ms median, measured over 300 calls.
+        Replay of real Claude Code history, 2026-09-27 · $0.069 in Jev for all 3,622 checks · some would not have prompted anyway, so 66% is an upper bound
       </div>
     </div>
   );
