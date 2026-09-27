@@ -14,15 +14,21 @@ Report the current state of jev-gate. Do not change anything.
    - the split across allow, ask and deny
    - median latency and total spend
 
-4. Run one live check so the user can see it working:
+4. Show what auto mode would have done, from the log:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/jev_gate.py" --stats
+```
+
+5. Run one live check so the user can see it working:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/jev_gate.py" --explain "git push --force origin main"
 ```
 
-5. Close with the one thing to do next:
-   - fewer than 7 days of log: keep running in observe mode
-   - 7 days or more and still in observe: run `/jev-calibrate`
+6. Close with the one thing to do next:
    - no key set: point at `.env.example`
+   - still in observe mode with at least a day of log: suggest `export JEV_GATE_MODE=auto` and a restart, quoting how many prompts it would have skipped
+   - in auto mode for 7 days or more: run `/jev-calibrate`
 
 Keep the whole report under fifteen lines. Numbers, not prose.

@@ -21,12 +21,20 @@ its arguments, so `cat` on the allowlist must not wave through `cat ~/.ssh/id_`.
 Fails open. Any error, timeout or missing key falls back to the harness's own
 permission prompt, so a network blip never bricks a session.
 
+Modes, set with JEV_GATE_MODE:
+    observe  log every decision, change nothing (the default)
+    auto     approve what is clearly safe, so its prompt never appears;
+             block what is clearly dangerous; ask you about the rest
+    guard    block denials, leave every other prompt as it was
+    enforce  block denials and anything unsure
+
 Usage:
     echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}' | ./jev_gate.py
     ./jev_gate.py --explain "git push --force origin main"
+    ./jev_gate.py --stats        what auto mode would have done with your log
 
 Exit codes:
-    0  allow, or fell back to the normal prompt
+    0  allow, or fell back to the normal prompt (auto mode answers in JSON)
     2  deny
 """
 
@@ -44,7 +52,11 @@ from pathlib import Path
 
 ENDPOINT = os.environ.get("JEV_ENDPOINT", "https://openrouter.ai/api/v1/systemone")
 MODEL = os.environ.get("JEV_MODEL", "typesafe/jev-1.13")
-MODE = os.environ.get("JEV_GATE_MODE", "observe")  # observe | guard | enforce
+MODE = os.environ.get("JEV_GATE_MODE", "observe")  # observe | auto | guard | enforce
+# Tools auto mode may approve on its own. Bash only by default: file edits
+# already have Claude Code's accept-edits mode, and a wrong approval on a
+# command is the one worth thinking about.
+AUTO_TOOLS = {t.strip() for t in os.environ.get("JEV_AUTO_TOOLS", "Bash").split(",") if t.strip()}
 LOG = Path(os.environ.get("JEV_GATE_LOG", Path.home() / ".jev-gate" / "decisions.jsonl"))
 TIMEOUT = float(os.environ.get("JEV_GATE_TIMEOUT", "5"))
 
@@ -83,7 +95,15 @@ def hard_rule(command: str) -> Decision | None:
     return None
 
 
+# Anything that chains, pipes, redirects or substitutes is more than the one
+# command the allowlist names. `git status && rm -rf src` starts with
+# `git status`, and in auto mode a fast-path allow is an approval.
+COMPOUND = re.compile(r"[;&|`<>\n]|\$\(")
+
+
 def fast_path(command: str) -> Decision | None:
+    if COMPOUND.search(command):
+        return None
     for pattern in FAST_ALLOW:
         if re.search(pattern, command):
             return Decision("allow", "fast-path", "read-only command on the allowlist")
@@ -173,7 +193,7 @@ def decide(command: str, tool: str = "Bash", user_message: str = "", cwd: str = 
     )
 
 
-def log(command: str, decision: Decision) -> None:
+def log(command: str, decision: Decision, tool: str = "Bash") -> None:
     try:
         LOG.parent.mkdir(parents=True, exist_ok=True)
         with LOG.open("a") as handle:
@@ -182,6 +202,7 @@ def log(command: str, decision: Decision) -> None:
                     {
                         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
                         "mode": MODE,
+                        "tool": tool,
                         "command": command,
                         **decision.__dict__,
                     }
@@ -235,7 +256,49 @@ def describe(tool: str, tool_input: dict) -> str:
     return f"{tool} {json.dumps(tool_input)[:400]}"
 
 
+def hook_answer(decision: str, reason: str) -> None:
+    """Tell Claude Code what to do, in the shape its PreToolUse hooks expect.
+    `allow` skips the permission prompt, `deny` blocks and shows the reason."""
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": decision,
+            "permissionDecisionReason": f"jev-gate: {reason}",
+        }
+    }))
+
+
+def stats() -> int:
+    """What auto mode would have done with everything in your log."""
+    try:
+        rows = [json.loads(line) for line in LOG.read_text().splitlines() if line.strip()]
+    except (OSError, ValueError):
+        rows = []
+    if not rows:
+        print(f"No decisions logged yet at {LOG}. Use your agent for a while, then run this again.")
+        return 0
+    auto_tools = [r for r in rows if r.get("tool", "Bash") in AUTO_TOOLS]
+    skip = sum(r["verdict"] == "allow" for r in auto_tools)
+    block = sum(r["verdict"] == "deny" for r in rows)
+    ask = len(rows) - skip - block
+    fallback = sum(r.get("source") == "fallback" for r in rows)
+    cost = sum(r.get("cost") or 0 for r in rows)
+    lat = sorted(r["latency_ms"] for r in rows if r.get("latency_ms"))
+    print(f"{len(rows)} decisions logged, {rows[0]['at'][:10]} to {rows[-1]['at'][:10]}.")
+    print(f"  {skip} would have run with no prompt in auto mode")
+    print(f"  {block} would have been blocked")
+    print(f"  {ask} would still ask you")
+    if fallback:
+        print(f"  {fallback} had no answer from Jev (no key or no network), so they asked you as normal")
+    if lat:
+        print(f"  median check {lat[len(lat) // 2]:.0f}ms, total spend ${cost:.4f}")
+    print("\nSwitch it on: export JEV_GATE_MODE=auto, then restart Claude Code.")
+    return 0
+
+
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--stats":
+        return stats()
     if len(sys.argv) > 2 and sys.argv[1] == "--explain":
         decision = decide(sys.argv[2])
         print(json.dumps(decision.__dict__, indent=2))
@@ -258,10 +321,19 @@ def main() -> int:
         user_message=event.get("user_message") or last_user_message(event.get("transcript_path", "")),
         cwd=event.get("cwd", os.getcwd()),
     )
-    log(command, decision)
+    log(command, decision, tool)
 
     if MODE == "observe":
         return 0  # log only, change nothing
+    if MODE == "auto":
+        # Clearly safe: approve it, so its prompt never appears. Clearly
+        # dangerous: block it with the reason. Anything else, including every
+        # error and missing key, gets the normal prompt.
+        if decision.verdict == "allow" and tool in AUTO_TOOLS:
+            hook_answer("allow", decision.reason)
+        elif decision.verdict == "deny":
+            hook_answer("deny", decision.reason)
+        return 0
     if decision.verdict == "deny" and MODE in ("guard", "enforce"):
         print(f"blocked by jev-gate: {decision.reason}", file=sys.stderr)
         return 2

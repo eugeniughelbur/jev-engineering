@@ -27,7 +27,22 @@ claude plugin marketplace add eugeniughelbur/jev-engineering
 claude plugin install jev-engineering@jev-engineering
 ```
 
-Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It installs in observe mode, so it logs every decision and blocks nothing until you say otherwise. Without a key it changes nothing: your normal permission prompts carry on.
+Then three steps:
+
+1. Set `OPENROUTER_API_KEY` and restart Claude Code. It starts in observe mode: it logs every decision and changes nothing.
+2. Work as usual for a day, then run `/jev-status`. It tells you how many of your prompts auto mode would have skipped, blocked, or still asked about.
+3. Turn it on with `export JEV_GATE_MODE=auto` and restart. Clearly safe commands now run with no prompt, clearly dangerous ones are blocked, and only the unclear ones still ask you.
+
+Without a key it changes nothing: your normal permission prompts carry on.
+
+Tested in a live Claude Code session on 2026-09-27, the same four commands with and without the gate:
+
+| Command | Without the gate | With auto mode |
+|---|---|---|
+| `npm run test` | Asked for approval | Ran, no prompt: on the allowlist |
+| `mkdir -p build-output` | Blocked | Ran, no prompt: Jev scored it 0.06 |
+| `cat ~/.ssh/id_...` | Blocked | Blocked, with the reason "reads a private key" |
+| `git push --force origin main` | Refused | Asked you: Jev scored it 0.88, so it stayed unsure |
 
 Or run it standalone:
 
@@ -77,13 +92,17 @@ It fails open. Any error, timeout or missing key falls back to your harness's no
 
 | Mode | What it does | Use it when |
 |---|---|---|
-| `observe` (default) | Logs every decision, blocks nothing | Always, for the first week |
-| `guard` | Blocks `deny`, logs the rest | You trust the hard rules |
-| `enforce` | Blocks `deny` and `ask` | Your thresholds came from your own log |
+| `observe` (default) | Logs every decision, changes nothing | Your first day or week |
+| `auto` | Approves clear `allow`s so their prompt never appears, blocks `deny`, asks about the rest | You want fewer prompts. The one to use day to day |
+| `guard` | Blocks `deny`, leaves every other prompt as it was | You only want the safety net |
+| `enforce` | Blocks `deny` and `ask` | Unattended runs where nobody can answer a prompt |
 
 ```bash
-export JEV_GATE_MODE=observe
+export JEV_GATE_MODE=auto
+./jev_gate.py --stats   # what auto mode would do with your log so far
 ```
+
+Auto mode only approves Bash commands by default. Set `JEV_AUTO_TOOLS=Bash,Edit,Write` to let it approve file edits too. A command that chains, pipes, redirects or substitutes, like `git status && rm -rf src`, never takes the allowlist shortcut. It goes to Jev.
 
 Read `~/.jev-gate/decisions.jsonl` for a week before you turn anything on. That file is the only source of thresholds that will fit your work.
 

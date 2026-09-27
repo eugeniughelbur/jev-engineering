@@ -369,8 +369,7 @@ const How: React.FC<{ t: number }> = ({ t }) => {
                 whiteSpace: "nowrap",
               }}
             >
-              {(verdict as string).toUpperCase()}
-              {stopAt === 3 ? " · p=0.78 · asks you" : " · no model"}
+              {verdict === "allow" ? "RUNS · no prompt" : verdict === "deny" ? "BLOCKED · no model" : "ASKS YOU · p=0.78"}
             </div>
           </div>
         );
@@ -549,7 +548,7 @@ const Outro: React.FC<{ t: number }> = ({ t }) => {
         </div>
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 790, textAlign: "center", opacity: ramp(t, O.meta, 0.35), ...mono(24, K.soft) }}>
-        starts in observe mode: it logs a week of your agent's commands before it blocks anything
+        starts by only logging · then <span style={{ color: K.rust }}>export JEV_GATE_MODE=auto</span> and safe commands stop asking
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 840, textAlign: "center", opacity: ramp(t, O.meta + 0.3, 0.35), ...mono(24, K.soft) }}>
         github.com/eugeniughelbur/jev-engineering · MIT · tested against 300 attacks

@@ -1,6 +1,6 @@
 {
   "name": "jev-engineering",
-  "description": "A safety gate for tool calls. Checks every Bash, Edit and Write against deterministic rules plus TypeSafe's Jev model, and answers allow, ask or deny in about 400ms for two hundredths of a cent. Logs only until you have read a week of your own decisions.",
+  "description": "A safety gate for tool calls. Checks every Bash, Edit and Write against deterministic rules plus TypeSafe's Jev model, and answers allow, ask or deny in about 400ms for two hundredths of a cent. Starts by logging only. Switch to auto mode and clearly safe commands run with no prompt.",
   "version": "0.1.0",
   "author": {
     "name": "Eugeniu Ghelbur",
