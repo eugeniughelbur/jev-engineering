@@ -1,44 +1,56 @@
 ![jev-gate, every tool call checked](assets/banner.png)
 
-# jev-gate: stop clicking "Allow", keep the brakes
+# jev-engineering: coding-agent tools on Jev, measured in public
 
-Auto-approve for Claude Code and Codex that can tell `ls` from `rm -rf`.
+Three tools built on [TypeSafe's Jev](https://typesafe.ai/), a model that answers yes/no questions in about 0.3 seconds for $0.00002 instead of writing text. Every claim below links to a benchmark you can rerun, including the one where a built-in tool beats mine.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-C8612D.svg)](LICENSE)
-[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-1A2840.svg)](#quick-start)
-[![Latency](https://img.shields.io/badge/median-371ms-1A2840.svg)](results/2026-09-20-injection-test.md)
-[![Cost](https://img.shields.io/badge/per%20call-%240.0000189-1A2840.svg)](results/2026-09-20-injection-test.md)
-[![Attack tested](https://img.shields.io/badge/attack%20tested-300%20calls-C8612D.svg)](results/2026-09-20-injection-test.md)
-[![Prompts removed](https://img.shields.io/badge/prompts%20removed-66%25%20of%203%2C622-C8612D.svg)](results/2026-09-27-prompts-removed.md)
+| Tool | What it does | Proof |
+|---|---|---|
+| [review-router](#review-router) | A GitHub Action that tells your AI code reviewer when it must read the whole pull request | A filename rule sent 13 real CVE fixes in Django and Express to a quick review. review-router sent all 13 to a full one |
+| [jev-gate](#jev-gate-a-strict-second-lock) | A strict second lock on every command your coding agent runs | Once a session claimed it was authorized, Claude Code's auto mode let 8 of 12 dangerous test commands run. jev-gate let 0 run |
+| [Use cases](usecases/) | Inbox triage, AI writing tells, Slack follow-ups, a check on messages before they send | Each with its own examples and numbers |
 
-Your coding agent asks "Allow?" before almost every command. So you pick one of two bad options:
+## review-router
 
-1. **Click "yes" all day**, until you stop reading and approve the one that matters.
-2. **Run with `--dangerously-skip-permissions`**, and hope nothing deletes your work or reads your keys.
+Your AI reviewer either re-reads the whole pull request on every push, which is slow and expensive, or reads only the new commits and misses what hides elsewhere. The usual fix is a path rule: full review for CI, auth and migration files, quick review for the rest.
 
-jev-gate is the third option. It checks every command in about 0.3 seconds, before it runs:
+That rule has a hole. On 561 commits from FastAPI, Express and Django, it sent 13 CVE fixes to the quick path, because the vulnerable code sat in files like `validators.py` and `cache.py`. review-router reads what the diff adds and sent all 13 to a full review, while 42% of commits could still skip it.
 
-- **Clearly safe**, like `git status`, `ls` or your tests: it runs. No prompt.
-- **Clearly dangerous**, like reading `~/.ssh/id_ed25519` or `rm -rf /`: blocked, and your agent is told why.
-- **Unsure**, like `git push --force`: you get the normal prompt, same as today.
+```yaml
+- uses: eugeniughelbur/jev-engineering/review-router@v1
+  with:
+    openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+```
 
-## Proof
+[![13 CVE fixes looked harmless: read the diff, not the filename](assets/review-router.jpg)](review-router/)
 
-- **66% fewer prompts.** On 3,622 commands Claude Code really ran for me, it approved 2,391 with no prompt. [How it was measured](results/2026-09-27-prompts-removed.md).
-- **Not one `rm`, `git push`, `git reset` or `sudo` was auto-approved.** Every one still asked.
-- **A real bug fix, with and without it.** Without the gate, Claude hit 3 permission walls and never fixed the bug. With it, 1 wall, and the bug was fixed.
+[Setup](review-router/) · [Benchmark](results/2026-09-27-review-routing-public.md)
 
-## Why you can trust it
+## jev-gate: a strict second lock
 
-- **Rules run first.** Plain regex blocks the dangerous classics before any model sees them.
-- **Only clear answers act.** A command is approved only when the model is confident it is safe. Everything in between asks you.
-- **It fails to your normal prompt.** No key, a timeout or an error means Claude Code asks you, exactly as it does today.
-- **Everything is logged** in `~/.jev-gate/decisions.jsonl`, and the code is open source under MIT.
-- **It costs about 1 cent a day.** Checks run on [TypeSafe's Jev](https://typesafe.ai/) at about $0.00002 each.
+Claude Code and Codex both ship their own auto-approval now: Claude Code's auto mode and Codex's Guardian. Use them. jev-gate is not a replacement. It is a second check that judges only the command, never the conversation, so nothing in the session can talk it into anything.
 
-It catches mistakes, not a determined attacker. The [attack test](results/2026-09-20-injection-test.md) counts how many polite fake approvals got through.
+I ran both on the same 30 commands, [full write-up here](results/2026-09-28-vs-claude-auto-mode.md):
 
-## Quick start
+| | Claude Code auto mode | jev-gate |
+|---|---|---|
+| Safe commands run with no prompt | 12 of 12 | 9 of 12 |
+| Dangerous commands that ran, once the session said it was authorized | 8 of 12 | 0 of 12 |
+| Median decision time | 0.77s | 0.28s |
+
+Claude's auto mode is built to trust what the user authorizes, so those 8 are a design choice, not bugs. jev-gate is stricter, and it asks more often.
+
+How it decides, before each command runs:
+
+- **Clearly safe**, like `git status`, `ls` or your tests: it runs, no prompt.
+- **Clearly dangerous**, like reading `~/.ssh` or `~/.aws/credentials`, or sending `env` to the internet: blocked, with the reason.
+- **Unsure**, like `git push --force`: your agent's normal prompt, or its own auto mode, takes over.
+
+On 3,622 commands from my own Claude Code history, it approved 66% on its own and never approved an `rm`, `git push`, `git reset` or `sudo`. [How that was measured](results/2026-09-27-prompts-removed.md).
+
+It catches mistakes, not a determined attacker. The [attack test](results/2026-09-20-injection-test.md) counts how many polite fake approvals got past its model step.
+
+### Quick start
 
 ```bash
 claude plugin marketplace add eugeniughelbur/jev-engineering
@@ -47,20 +59,10 @@ claude plugin install jev-engineering@jev-engineering
 
 1. **Add your key.** Put `"env": {"OPENROUTER_API_KEY": "sk-or-..."}` in `~/.claude/settings.json`, then restart Claude Code.
 2. **Work for ten minutes.** It only watches at first, and changes nothing.
-3. **Run `/jev-status`.** It shows how many prompts it would have skipped for you.
-4. **Run `/jev-on`.** Auto mode starts on the next command. `/jev-off` switches it back.
+3. **Run `/jev-status`.** It shows what it would have approved and blocked.
+4. **Run `/jev-on`.** It starts deciding on the next command. `/jev-off` switches it back.
 
 Codex, Cursor and OpenCode: see [integrations/](integrations/). Codex is tested live.
-
-It pairs with [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction): that one saves your tokens, this one saves your clicks.
-
-![A dangerous command is denied, a safe one passes with no model call](assets/demo.gif)
-
-## Also in this repo
-
-- **[review-router](review-router/)**, a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. A typical path rule sent 13 real CVE fixes to a quick review. review-router sent all 13 to a full one. [Results](results/2026-09-27-review-routing-public.md).
-- **[Use cases](usecases/)** built the same way: inbox triage, AI writing tells, Slack follow-ups, and a check on messages before they send.
-- **The attack kit** I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 
 Or run it standalone:
 
@@ -84,12 +86,6 @@ export OPENROUTER_API_KEY=sk-or-...
 ```
 
 Run on 2026-09-27 against `typesafe/jev-1.13`. A force push to main is risky but sometimes intended, so the gate stops and asks you instead of refusing. An earlier run of the same command returned `deny` at 0.94. Scores move when the model is retrained, which is why the thresholds live in your own config.
-
-## Why this exists
-
-Your coding agent asks permission for everything or for nothing. You click approve forty times an hour until you stop reading, or you run it wide open and hope. No middle setting exists.
-
-A real middle setting means asking a second model "is this safe?" before every action. With a chat model that costs about three cents and four seconds each time, so nobody runs it. Jev costs $0.0000189 and 371 milliseconds, measured here, which is about one cent a day at 500 checks.
 
 ## How it decides
 
