@@ -4,7 +4,7 @@ description: Show whether the gate is running, which mode it is in, and what it 
 
 Report the current state of jev-gate. Do not change anything.
 
-1. Check the mode. Read `JEV_GATE_MODE` from the environment. If unset, the mode is `observe`, which logs and blocks nothing.
+1. Check the mode. `JEV_GATE_MODE` in the environment wins. Otherwise read `~/.jev-gate/mode`. If neither is set, the mode is `observe`, which logs and blocks nothing.
 
 2. Check the key. Confirm `OPENROUTER_API_KEY` or `TYPESAFE_API_KEY` is set. Do not print any part of the key itself. If neither is set, say so plainly: the gate is falling back to the normal permission prompt on every call.
 
@@ -28,7 +28,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/jev_gate.py" --explain "git push --force origin m
 
 6. Close with the one thing to do next:
    - no key set: point at `.env.example`
-   - still in observe mode with at least a day of log: suggest `export JEV_GATE_MODE=auto` and a restart, quoting how many prompts it would have skipped
+   - still in observe mode with 20 or more decisions logged: quote how many prompts auto mode would have skipped, and suggest `/jev-on`
    - in auto mode for 7 days or more: run `/jev-calibrate`
 
 Keep the whole report under fifteen lines. Numbers, not prose.

@@ -1,6 +1,8 @@
 ![jev-gate, every tool call checked](assets/banner.png)
 
-# jev-gate: 66% fewer permission prompts for AI coding agents
+# jev-gate: stop clicking "Allow", keep the brakes
+
+Auto-approve for Claude Code and Codex that can tell `ls` from `rm -rf`.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-C8612D.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-1A2840.svg)](#quick-start)
@@ -9,49 +11,56 @@
 [![Attack tested](https://img.shields.io/badge/attack%20tested-300%20calls-C8612D.svg)](results/2026-09-20-injection-test.md)
 [![Prompts removed](https://img.shields.io/badge/prompts%20removed-66%25%20of%203%2C622-C8612D.svg)](results/2026-09-27-prompts-removed.md)
 
-Your coding agent asks permission for every command, so you either click "yes" all day or switch prompts off and hope. jev-gate checks each command with [TypeSafe's Jev](https://typesafe.ai/) in about 0.3 seconds for two hundredths of a cent:
+Your coding agent asks "Allow?" before almost every command. So you pick one of two bad options:
 
-- **Clearly safe**, like `git status` or running your tests: it runs, no prompt.
-- **Clearly dangerous**, like reading `~/.ssh/id_ed25519`: blocked, with the reason.
-- **Unsure**, like `git push --force`: you get the normal prompt.
+1. **Click "yes" all day**, until you stop reading and approve the one that matters.
+2. **Run with `--dangerously-skip-permissions`**, and hope nothing deletes your work or reads your keys.
 
-On 3,622 commands Claude Code really ran for me, auto mode approved 66% with no prompt and never approved an `rm`, `git push` or `sudo`. In a live session, the same bug fix stalled on permissions without the gate and finished with it. [Full results](results/2026-09-27-prompts-removed.md).
+jev-gate is the third option. It checks every command in about 0.3 seconds, before it runs:
 
-It pairs with [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction): that one saves your tokens, this one saves your clicks.
+- **Clearly safe**, like `git status`, `ls` or your tests: it runs. No prompt.
+- **Clearly dangerous**, like reading `~/.ssh/id_ed25519` or `rm -rf /`: blocked, and your agent is told why.
+- **Unsure**, like `git push --force`: you get the normal prompt, same as today.
 
-It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
+## Proof
 
-**New:** [review-router](review-router/), a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. A typical path rule sent 13 real CVE fixes in Django and Express to a quick review. review-router sent all 13 to a full one, and still let 42% of 561 public commits skip. [Results](results/2026-09-27-review-routing-public.md).
+- **66% fewer prompts.** On 3,622 commands Claude Code really ran for me, it approved 2,391 with no prompt. [How it was measured](results/2026-09-27-prompts-removed.md).
+- **Not one `rm`, `git push`, `git reset` or `sudo` was auto-approved.** Every one still asked.
+- **A real bug fix, with and without it.** Without the gate, Claude hit 3 permission walls and never fixed the bug. With it, 1 wall, and the bug was fixed.
 
-[![13 CVE fixes looked harmless: read the diff, not the filename](assets/review-router.jpg)](review-router/)
+## Why you can trust it
 
-![A dangerous command is denied in 371 milliseconds, a safe one passes with no model call](assets/demo.gif)
+- **Rules run first.** Plain regex blocks the dangerous classics before any model sees them.
+- **Only clear answers act.** A command is approved only when the model is confident it is safe. Everything in between asks you.
+- **It fails to your normal prompt.** No key, a timeout or an error means Claude Code asks you, exactly as it does today.
+- **Everything is logged** in `~/.jev-gate/decisions.jsonl`, and the code is open source under MIT.
+- **It costs about 1 cent a day.** Checks run on [TypeSafe's Jev](https://typesafe.ai/) at about $0.00002 each.
+
+It catches mistakes, not a determined attacker. The [attack test](results/2026-09-20-injection-test.md) counts how many polite fake approvals got through.
 
 ## Quick start
-
-Two commands in Claude Code:
 
 ```bash
 claude plugin marketplace add eugeniughelbur/jev-engineering
 claude plugin install jev-engineering@jev-engineering
 ```
 
-Then three steps:
+1. **Add your key.** Put `"env": {"OPENROUTER_API_KEY": "sk-or-..."}` in `~/.claude/settings.json`, then restart Claude Code.
+2. **Work for ten minutes.** It only watches at first, and changes nothing.
+3. **Run `/jev-status`.** It shows how many prompts it would have skipped for you.
+4. **Run `/jev-on`.** Auto mode starts on the next command. `/jev-off` switches it back.
 
-1. Set `OPENROUTER_API_KEY` and restart Claude Code. It starts in observe mode: it logs every decision and changes nothing.
-2. Work as usual for a day, then run `/jev-status`. It tells you how many of your prompts auto mode would have skipped, blocked, or still asked about.
-3. Turn it on with `export JEV_GATE_MODE=auto` and restart. Clearly safe commands now run with no prompt, clearly dangerous ones are blocked, and only the unclear ones still ask you.
+Codex, Cursor and OpenCode: see [integrations/](integrations/). Codex is tested live.
 
-Without a key it changes nothing: your normal permission prompts carry on.
+It pairs with [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction): that one saves your tokens, this one saves your clicks.
 
-Tested in a live Claude Code session on 2026-09-27, the same four commands with and without the gate:
+![A dangerous command is denied, a safe one passes with no model call](assets/demo.gif)
 
-| Command | Without the gate | With auto mode |
-|---|---|---|
-| `npm run test` | Asked for approval | Ran, no prompt: on the allowlist |
-| `mkdir -p build-output` | Blocked | Ran, no prompt: Jev scored it 0.06 |
-| `cat ~/.ssh/id_...` | Blocked | Blocked, with the reason "reads a private key" |
-| `git push --force origin main` | Refused | Asked you: Jev scored it 0.88, so it stayed unsure |
+## Also in this repo
+
+- **[review-router](review-router/)**, a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. A typical path rule sent 13 real CVE fixes to a quick review. review-router sent all 13 to a full one. [Results](results/2026-09-27-review-routing-public.md).
+- **[Use cases](usecases/)** built the same way: inbox triage, AI writing tells, Slack follow-ups, and a check on messages before they send.
+- **The attack kit** I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 
 Or run it standalone:
 
@@ -107,9 +116,12 @@ It fails open. Any error, timeout or missing key falls back to your harness's no
 | `enforce` | Blocks `deny` and `ask` | Unattended runs where nobody can answer a prompt |
 
 ```bash
-export JEV_GATE_MODE=auto
-./jev_gate.py --stats   # what auto mode would do with your log so far
+/jev-on                      # in Claude Code: auto mode from the next command
+./jev_gate.py --mode auto    # the same, from a shell
+./jev_gate.py --stats        # what auto mode would do with your log so far
 ```
+
+The mode is saved in `~/.jev-gate/mode`, so no restart is needed. `JEV_GATE_MODE` in the environment still wins over it.
 
 Auto mode only approves Bash commands by default. Set `JEV_AUTO_TOOLS=Bash,Edit,Write` to let it approve file edits too. A command that chains, pipes, redirects or substitutes, like `git status && rm -rf src`, never takes the allowlist shortcut. It goes to Jev.
 
@@ -159,13 +171,15 @@ The gate answers one question. [usecases/](usecases/) holds the decisions around
 | [Slack follow-ups](usecases/slack-followups/) | 14 of 14 messages sorted right for $0.0002 |
 | [Outbound check](usecases/outbound-check/) | Holds risky emails and Slack messages before they send. All 8 risky drafts held, 1 false alarm in 16 |
 
-## Three commands
+## Commands
 
 Installed as a plugin, you get:
 
 | Command | What it does |
 |---|---|
-| `/jev-status` | Mode, key, and what the log holds so far. Runs one live check so you can see it work. |
+| `/jev-status` | Mode, key, and how many prompts auto mode would have skipped so far. Runs one live check so you can see it work. |
+| `/jev-on` | Turns auto mode on from the next command. No restart. |
+| `/jev-off` | Back to logging only. |
 | `/jev-calibrate` | Reads your week of decisions and hands back your thresholds, your fast-path rules and your hard-rule candidates. |
 | `/jev-attack` | Fires 300 injections at your own gate and reports what got through. |
 | `/jev-policy` | The rules in force, which layer each came from, and pulls your team's latest. |

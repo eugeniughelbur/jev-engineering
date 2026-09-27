@@ -52,7 +52,22 @@ from pathlib import Path
 
 ENDPOINT = os.environ.get("JEV_ENDPOINT", "https://openrouter.ai/api/v1/systemone")
 MODEL = os.environ.get("JEV_MODEL", "typesafe/jev-1.13")
-MODE = os.environ.get("JEV_GATE_MODE", "observe")  # observe | auto | guard | enforce
+MODES = ("observe", "auto", "guard", "enforce")
+# The mode set by /jev-on lives in a file, so it takes effect on the next
+# command with no restart. An environment variable still wins, for CI and for
+# anyone who prefers it.
+MODE_FILE = Path(os.environ.get("JEV_GATE_HOME", Path.home() / ".jev-gate")) / "mode"
+
+
+def _saved_mode() -> str | None:
+    try:
+        mode = MODE_FILE.read_text().strip()
+    except OSError:
+        return None
+    return mode if mode in MODES else None
+
+
+MODE = os.environ.get("JEV_GATE_MODE") or _saved_mode() or "observe"
 # Tools auto mode may approve on its own. Bash only by default: file edits
 # already have Claude Code's accept-edits mode, and a wrong approval on a
 # command is the one worth thinking about.
@@ -310,7 +325,8 @@ def stats() -> int:
         print(f"  {fallback} had no answer from Jev (no key or no network), so they asked you as normal")
     if lat:
         print(f"  median check {lat[len(lat) // 2]:.0f}ms, total spend ${cost:.4f}")
-    print("\nSwitch it on: export JEV_GATE_MODE=auto, then restart Claude Code.")
+    if MODE != "auto":
+        print("\nSwitch it on: /jev-on in Claude Code, or ./jev_gate.py --mode auto")
     return 0
 
 
@@ -328,7 +344,21 @@ def action_for(decision: Decision, tool: str) -> str:
     return "prompt"  # observe: log only, change nothing
 
 
+def set_mode(mode: str) -> int:
+    if mode not in MODES:
+        print(f"unknown mode {mode!r}, pick one of: {', '.join(MODES)}", file=sys.stderr)
+        return 1
+    MODE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    MODE_FILE.write_text(mode + "\n")
+    print(f"jev-gate mode is now {mode}. It applies from the next command, no restart needed.")
+    if os.environ.get("JEV_GATE_MODE") and os.environ["JEV_GATE_MODE"] != mode:
+        print(f"Note: JEV_GATE_MODE={os.environ['JEV_GATE_MODE']} is set in your environment and wins over this.")
+    return 0
+
+
 def main() -> int:
+    if len(sys.argv) > 2 and sys.argv[1] == "--mode":
+        return set_mode(sys.argv[2])
     if len(sys.argv) > 1 and sys.argv[1] == "--stats":
         return stats()
     if len(sys.argv) > 2 and sys.argv[1] == "--explain":

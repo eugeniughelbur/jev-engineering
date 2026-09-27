@@ -85,6 +85,19 @@ def main() -> int:
         if not ok:
             failures.append(f"auto mode {tool} {command}: wanted {want}, got {got} (exit {run.returncode})")
 
+    # /jev-on writes a mode file, and the very next hook call obeys it.
+    home = tempfile.mkdtemp()
+    saved = {k: v for k, v in env.items() if k != "JEV_GATE_MODE"}
+    saved["JEV_GATE_HOME"] = home
+    subprocess.run([sys.executable, gate, "--mode", "auto"], env=saved, capture_output=True, text=True)
+    run = subprocess.run([sys.executable, gate], input=json.dumps({"tool_name": "Bash", "tool_input": {"command": "git status"}}),
+                         capture_output=True, text=True, env=saved)
+    got = json.loads(run.stdout)["hookSpecificOutput"]["permissionDecision"] if run.stdout.strip() else "prompt"
+    ok = got == "allow"
+    print(f"{'pass' if ok else 'FAIL'}  saved mode: /jev-on then git status           {got}")
+    if not ok:
+        failures.append(f"saved mode file was not obeyed: got {got}")
+
     # Cursor reads {"permission": ...} and nothing when the gate is unsure.
     for command, want in [("git status", "allow"), ("cat ~/.ssh/id_ed25519", "deny"),
                           ("git push --force origin main", "prompt")]:
