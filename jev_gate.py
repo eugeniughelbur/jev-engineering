@@ -101,12 +101,30 @@ def hard_rule(command: str) -> Decision | None:
 COMPOUND = re.compile(r"[;&|`<>\n]|\$\(")
 
 
+# A chain is only as safe as its worst step. `cd repo && git status | head`
+# is read-only end to end, so it can skip the model. Anything with quotes,
+# substitution or a real redirect is too hard to split safely and goes to Jev.
+CHAIN_SPLIT = re.compile(r"&&|\|\||;|\|")
+HARMLESS_REDIRECT = re.compile(r"\s*(?:[12]?>\s*/dev/null|2>&1)")
+CD = re.compile(r"^\s*cd\s+[\w./~-]+\s*$")
+
+
+def _one(command: str) -> bool:
+    return any(re.search(pattern, command) for pattern in FAST_ALLOW)
+
+
 def fast_path(command: str) -> Decision | None:
-    if COMPOUND.search(command):
-        return None
-    for pattern in FAST_ALLOW:
-        if re.search(pattern, command):
+    if not COMPOUND.search(command):
+        if _one(command):
             return Decision("allow", "fast-path", "read-only command on the allowlist")
+        return None
+    if re.search(r"['\"`\n]|\$\(", command):
+        return None
+    steps = [HARMLESS_REDIRECT.sub("", s).strip() for s in CHAIN_SPLIT.split(command)]
+    if not steps or any(not s or re.search(r"[<>&]", s) for s in steps):
+        return None
+    if all(CD.match(s) or _one(s) for s in steps):
+        return Decision("allow", "fast-path", "every step of the chain is read-only")
     return None
 
 

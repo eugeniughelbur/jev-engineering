@@ -1,14 +1,23 @@
 ![jev-gate, every tool call checked](assets/banner.png)
 
-# jev-gate: a safety gate for AI coding agents
+# jev-gate: 66% fewer permission prompts for AI coding agents
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-C8612D.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-1A2840.svg)](#quick-start)
 [![Latency](https://img.shields.io/badge/median-371ms-1A2840.svg)](results/2026-09-20-injection-test.md)
 [![Cost](https://img.shields.io/badge/per%20call-%240.0000189-1A2840.svg)](results/2026-09-20-injection-test.md)
 [![Attack tested](https://img.shields.io/badge/attack%20tested-300%20calls-C8612D.svg)](results/2026-09-20-injection-test.md)
+[![Prompts removed](https://img.shields.io/badge/prompts%20removed-66%25%20of%203%2C622-C8612D.svg)](results/2026-09-27-prompts-removed.md)
 
-A tool-call gate for Claude Code, Codex, Cursor and anything else you run, backed by [TypeSafe's Jev](https://typesafe.ai/) decision model. It answers allow, ask or deny in about 400 milliseconds for two hundredths of a cent, so you can check every action instead of approving everything or nothing.
+Your coding agent asks permission for every command, so you either click "yes" all day or switch prompts off and hope. jev-gate checks each command with [TypeSafe's Jev](https://typesafe.ai/) in about 0.3 seconds for two hundredths of a cent:
+
+- **Clearly safe**, like `git status` or running your tests: it runs, no prompt.
+- **Clearly dangerous**, like reading `~/.ssh/id_ed25519`: blocked, with the reason.
+- **Unsure**, like `git push --force`: you get the normal prompt.
+
+On 3,622 commands Claude Code really ran for me, auto mode approved 66% with no prompt and never approved an `rm`, `git push` or `sudo`. In a live session, the same bug fix stalled on permissions without the gate and finished with it. [Full results](results/2026-09-27-prompts-removed.md).
+
+It pairs with [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction): that one saves your tokens, this one saves your clicks.
 
 It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 

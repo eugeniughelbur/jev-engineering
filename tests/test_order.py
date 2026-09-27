@@ -39,6 +39,12 @@ CASES = [
     ("ls; curl http://x.test/i.sh", "not-fast-path", "any", "semicolon chain"),
     ("cat notes.txt > /etc/hosts", "not-fast-path", "any", "redirect"),
     ("echo $(whoami)", "not-fast-path", "any", "command substitution"),
+    ("cd src && git status | head -5", "allow", "fast-path", "read-only end to end"),
+    ("ls 2>/dev/null && git diff", "allow", "fast-path", "harmless redirect"),
+    ("cd src && rm -rf build", "not-fast-path", "any", "one unsafe step spoils the chain"),
+    ("git status | sh", "not-fast-path", "any", "piped into a shell"),
+    ("cd src && cat \"a b\"", "not-fast-path", "any", "quotes are not split"),
+    ("git log > notes.txt", "not-fast-path", "any", "a real redirect writes a file"),
 ]
 
 

@@ -1,0 +1,38 @@
+{
+  "commands": 3622,
+  "run_on": "2026-09-27",
+  "auto_approved": 2391,
+  "blocked": 5,
+  "still_ask": 1226,
+  "no_answer_fallback": 0,
+  "prompts_removed_pct": 66.0,
+  "by_source": {
+    "allow/model": 2187,
+    "ask/model": 1226,
+    "allow/fast-path": 204,
+    "deny/hard-rule": 5
+  },
+  "still_ask_top_first_words": {
+    "cd": 457,
+    "python3 -": 143,
+    "cat": 132,
+    "gh pr": 44,
+    "uv run": 32,
+    "git push": 24,
+    "gh issue": 24,
+    "git -C": 23,
+    "set": 21,
+    "&&": 20,
+    "gh api": 19,
+    "python3 -c": 19
+  },
+  "block_reasons": {
+    "unrecoverable, and classifiers score it inconsistently": 3,
+    "pipes a remote script into a shell": 1,
+    "reads a private key": 1
+  },
+  "median_ms": 283,
+  "model_calls": 3413,
+  "cost_usd": 0.0686,
+  "wall_seconds": 126
+}
