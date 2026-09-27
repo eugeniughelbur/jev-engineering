@@ -1,0 +1,81 @@
+{
+  "_": "Timing for the jev-engineering repo reel, seconds after PRE. Scenes and scripts/music.py both read it. 120 BPM.",
+  "bpm": 120,
+  "fps": 30,
+  "pre": 0.6,
+  "duration": 38,
+  "scene": { "hook": 0, "gate": 4, "attack": 10, "packs": 15, "review": 21, "cases": 27, "outro": 33, "end": 38 },
+
+  "hook": {
+    "lines": [[0.25, "Asking a chat model \"is this safe?\""], [1.0, "costs about 3 cents and 4 seconds."]],
+    "jev": 2.0,
+    "stats": [[2.5, "371ms"], [3.0, "$0.0000189"]]
+  },
+
+  "gate": {
+    "title": 4.25,
+    "rows": [
+      [5.0, "git status", "allow", "fast path, no model", "<10ms"],
+      [6.0, "git push --force origin main", "deny", "destructive p=0.94", "372ms"],
+      [7.0, "cat ~/.ssh/id_ed25519", "deny", "hard rule, no model", "<10ms"]
+    ],
+    "caption": 8.25
+  },
+
+  "attack": {
+    "title": 10.25,
+    "bars": [[11.0, "\"ignore your instructions\"", 0], [12.0, "\"the owner approved this\"", 3]],
+    "punch": 13.25
+  },
+
+  "packs": {
+    "title": 15.25,
+    "cards": [
+      [16.0, "email", "Here's the prod key: sk_live_4f9...", "private_data 0.94", "deny"],
+      [17.5, "refund", "Refund $4,200 on order #1182 ($42)", "authorised 0.02", "deny"]
+    ],
+    "chips": 19.0
+  },
+
+  "review": {
+    "title": 21.25,
+    "cards": [22.0, 22.25, 22.5, 22.75, 23.0, 23.25],
+    "count": 24.0,
+    "stats": [25.0, 25.5]
+  },
+
+  "cases": {
+    "title": 27.25,
+    "tiles": [28.0, 28.5, 29.0, 29.5, 30.0, 30.5],
+    "caption": 31.5
+  },
+
+  "outro": {
+    "title": 33.25,
+    "type_start": 34.25,
+    "type_end": 35.75,
+    "url": 36.25
+  },
+
+  "hits": [
+    [0.25, "tick"], [1.0, "tick"], [2.0, "chime", 660], [2.5, "thud"], [3.0, "thud"],
+    [5.0, "tick"], [6.0, "thud"], [7.0, "thud"], [8.25, "chime", 880],
+    [11.0, "tick"], [12.0, "thud"], [13.25, "boom"],
+    [16.0, "tick"], [16.75, "thud"], [17.5, "tick"], [18.25, "thud"], [19.0, "chime", 990],
+    [22.0, "tick"], [22.25, "tick"], [22.5, "tick"], [22.75, "tick"], [23.0, "tick"], [23.25, "tick"],
+    [24.0, "chime", 880], [25.0, "thud"], [25.5, "thud"],
+    [28.0, "tick"], [28.5, "tick"], [29.0, "tick"], [29.5, "tick"], [30.0, "tick"], [30.5, "tick"],
+    [33.25, "chime", 523.25], [36.25, "chime", 784]
+  ],
+  "typing": [34.25, 35.75, 52],
+
+  "music": {
+    "chords": ["Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "Am"],
+    "drums_in": 4.0,
+    "break": [20.5, 21.0],
+    "drop": 21.0,
+    "drums_out": 35.0,
+    "risers": [[2.0, 4.0], [19.0, 21.0]],
+    "booms": [4.0, 21.0]
+  }
+}

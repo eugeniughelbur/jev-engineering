@@ -1,4 +1,4 @@
-# review-router launch reel: 30 seconds, built in code
+# Two launch reels, 30 and 38 seconds, built in code
 
 A 30-second motion-graphics video for review-router, made with [Remotion](https://www.remotion.dev). The soundtrack is synthesized in Python from the same timing file, so no samples or stock music are used.
 
@@ -7,7 +7,10 @@ npm install
 npm run studio   # scrub the timeline in a browser
 npm run render   # regenerate music, then out/review-router.mp4 (1080p)
 npm run poster   # out/poster.png key art
+npm run render-repo   # the whole-repo reel, out/jev-engineering.mp4
 ```
+
+The repo reel covers the gate, the attack kit, the question packs, review-router, the use cases and the install. Its timing lives in [src/cues-repo.json](src/cues-repo.json), and the same music script builds its soundtrack.
 
 ## One timing file
 

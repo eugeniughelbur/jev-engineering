@@ -1,6 +1,7 @@
 """Synthesize the soundtrack from src/cues.json. No samples, no stock music.
 
-    uv run --with numpy scripts/music.py
+    uv run --with numpy scripts/music.py                                   # launch reel
+    uv run --with numpy scripts/music.py src/cues-repo.json music-repo.wav  # repo reel
 
 Every drum, riser and UI sound is placed at a cue the picture also reads, so
 retiming a cue moves both. 120 BPM, A minor, one chord per bar.
@@ -9,13 +10,15 @@ retiming a cue moves both. 120 BPM, A minor, one chord per bar.
 from __future__ import annotations
 
 import json
+import sys
 import wave
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).parent.parent
-CUES = json.loads((HERE / "src" / "cues.json").read_text())
+CUES = json.loads((HERE / (sys.argv[1] if len(sys.argv) > 1 else "src/cues.json")).read_text())
+OUT_NAME = sys.argv[2] if len(sys.argv) > 2 else "music.wav"
 SR = 48000
 PRE = CUES["pre"]
 LENGTH = PRE + CUES["duration"] + 0.5
@@ -138,7 +141,7 @@ while t < music["drums_out"] - 1e-9:
         add(kick(), t, 0.95)
         if abs((t % 1.0) - 0.5) < 1e-6:
             add(clap(), t, 0.7, pan=0.1)
-    if t >= CUES["scene"]["diff"] and not in_break:
+    if t >= music.get("hats_in", 8.0) and not in_break:
         add(hat(), t + BEAT / 2, 1.0, pan=-0.3)
         if t >= music["drop"]:
             add(hat(), t + BEAT / 4, 0.6, pan=0.3)
@@ -183,7 +186,7 @@ for bar, name in enumerate(music["chords"]):
 pad = lowpass(pad, 1400)
 # Quieter pad under the cold open, fuller from the drop.
 level = np.full(N, 0.55)
-level[: at(CUES["scene"]["rule"])] = 0.35
+level[: at(music["drums_in"])] = 0.35
 level[at(music["drop"]) :] = 0.75
 pad *= level * duck
 bass *= duck
@@ -193,34 +196,46 @@ R += np.concatenate([np.zeros(delay), pad[:-delay]]) + bass * 0.9
 
 for a, b in music["risers"]:
     add(riser(b - a), a, 0.55)
-add(boom(), CUES["scene"]["rule"], 0.7)
-add(boom(), music["drop"], 1.0)
+for i, bt in enumerate(music.get("booms", [music["drums_in"], music["drop"]])):
+    add(boom(), bt, 1.0 if bt == music["drop"] else 0.7)
 
 # ---------------------------------------------------------------- UI hits
-for at_, _ in CUES["problem"]["words"]:
-    add(tick(2200, 0.04), at_, 0.25, pan=-0.2)
-for at_, _ in CUES["problem"]["slams"]:
-    add(thud(), at_, 0.8)
-for x in CUES["rule"]["cards"]:
-    add(tick(1500, 0.06), x, 0.3, pan=0.3)
-for x in CUES["rule"]["stamps"]:
-    add(thud(), x, 0.55, pan=-0.1)
-for x in CUES["diff"]["lines"]:
-    add(tick(2600, 0.03), x, 0.2)
-add(chime(660), CUES["diff"]["fanout"], 0.25)
-add(chime(880), CUES["diff"]["hit"], 0.35)
-add(thud(), CUES["diff"]["verdict"], 0.8)
-for x in CUES["route"]["cves"]:
-    add(tick(1200, 0.05), x + 0.6, 0.25, pan=0.25)
-add(chime(990), CUES["route"]["total"], 0.4)
-for x in CUES["bench"]["slams"]:
-    add(thud(), x, 0.9)
-o = CUES["outro"]
-chars = 55
-for k in range(chars):
-    add(tick(3000 + rng.integers(-300, 300), 0.02), o["type_start"] + k * (o["type_end"] - o["type_start"]) / chars, 0.12)
-add(chime(523.25), o["title"], 0.45)
-add(chime(784), o["url"], 0.25)
+SOUNDS = {"tick": lambda *a: tick(1800, 0.05), "thud": lambda *a: thud(), "boom": lambda *a: boom(),
+          "chime": lambda f=660, *a: chime(f)}
+GAIN = {"tick": 0.28, "thud": 0.8, "boom": 0.8, "chime": 0.35}
+if "hits" in CUES:
+    for hit in CUES["hits"]:
+        t_, kind, *args = hit
+        add(SOUNDS[kind](*args), t_, GAIN[kind])
+    a_, b_, chars = CUES["typing"]
+    for k in range(chars):
+        add(tick(3000 + rng.integers(-300, 300), 0.02), a_ + k * (b_ - a_) / chars, 0.12)
+else:
+    for at_, _ in CUES["problem"]["words"]:
+        add(tick(2200, 0.04), at_, 0.25, pan=-0.2)
+    for at_, _ in CUES["problem"]["slams"]:
+        add(thud(), at_, 0.8)
+    for x in CUES["rule"]["cards"]:
+        add(tick(1500, 0.06), x, 0.3, pan=0.3)
+    for x in CUES["rule"]["stamps"]:
+        add(thud(), x, 0.55, pan=-0.1)
+    for x in CUES["diff"]["lines"]:
+        add(tick(2600, 0.03), x, 0.2)
+    add(chime(660), CUES["diff"]["fanout"], 0.25)
+    add(chime(880), CUES["diff"]["hit"], 0.35)
+    add(thud(), CUES["diff"]["verdict"], 0.8)
+    for x in CUES["route"]["cves"]:
+        add(tick(1200, 0.05), x + 0.6, 0.25, pan=0.25)
+    add(chime(990), CUES["route"]["total"], 0.4)
+    for x in CUES["bench"]["slams"]:
+        add(thud(), x, 0.9)
+    o = CUES["outro"]
+    chars = 55
+    for k in range(chars):
+        add(tick(3000 + rng.integers(-300, 300), 0.02), o["type_start"] + k * (o["type_end"] - o["type_start"]) / chars, 0.12)
+    add(chime(523.25), o["title"], 0.45)
+    add(chime(784), o["url"], 0.25)
+
 
 # ---------------------------------------------------------------- master
 fade = np.ones(N)
@@ -232,7 +247,7 @@ mix /= np.max(np.abs(mix)) / 0.89
 # About -14 LUFS, where X and LinkedIn normalise to anyway.
 mix *= 0.6
 
-out = HERE / "public" / "music.wav"
+out = HERE / "public" / OUT_NAME
 out.parent.mkdir(exist_ok=True)
 pcm = (mix.T * 32767).astype("<i2")
 with wave.open(str(out), "wb") as w:
