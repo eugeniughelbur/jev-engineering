@@ -2,14 +2,25 @@
 // accent, emerald for "the good path". Same palette as the post image.
 
 import React from "react";
-import { loadFont as loadMarker } from "@remotion/google-fonts/PermanentMarker";
-import { loadFont as loadHand } from "@remotion/google-fonts/Kalam";
-import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
+import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
+import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
+import { loadFont as loadSora } from "@remotion/google-fonts/Sora";
+import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
 import { wobble } from "./anim";
 
-export const MARKER = loadMarker().fontFamily;
-export const HAND = loadHand("normal", { weights: ["400", "700"] }).fontFamily;
-export const MONO = loadMono("normal", { weights: ["500", "700"] }).fontFamily;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const opts = (weights: string[]): any => ({ weights, subsets: ["latin"], ignoreTooManyRequestsWarning: true });
+const geist = loadGeist("normal", opts(["400", "500", "700", "800"])).fontFamily;
+const spaceGrotesk = loadSpaceGrotesk("normal", opts(["500", "700"])).fontFamily;
+const sora = loadSora("normal", opts(["500", "700", "800"])).fontFamily;
+const inter = loadInter("normal", opts(["500", "700", "800"])).fontFamily;
+
+// One text stack: Geist, then Space Grotesk, Sora and Inter for any missing glyph.
+const STACK = `${geist}, ${spaceGrotesk}, ${sora}, ${inter}, sans-serif`;
+export const MARKER = STACK; // headlines, set heavy where used
+export const HAND = STACK; // body and labels
+export const MONO = `${loadGeistMono("normal", opts(["400", "500", "700"])).fontFamily}, ui-monospace, monospace`;
 
 export const C = {
   paper: "#EDE3D2",
@@ -131,8 +142,9 @@ export const FileCard: React.FC<{
           borderRadius: 8,
           color: C.rust,
           background: "rgba(237,227,210,0.9)",
-          fontFamily: MARKER,
-          fontSize: 34,
+          fontFamily: MONO,
+          fontWeight: 700,
+          fontSize: 32,
           letterSpacing: 2,
         }}
       >
@@ -163,7 +175,7 @@ export const Burst: React.FC<{ size: number; spin: number; label?: string }> = (
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: MARKER,
+          fontFamily: MARKER, fontWeight: 800, letterSpacing: -1,
           fontSize: size * 0.24,
           color: C.ink,
         }}

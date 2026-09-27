@@ -14,9 +14,9 @@ const Heading: React.FC<{ n?: number; text: string; t: number; at: number; top?:
   return (
     <div style={{ ...abs, top, left: 0, right: 0, textAlign: "center", opacity: clamp(p * 2), transform: `translateY(${(1 - p) * 26}px)` }}>
       {n !== undefined && (
-        <span style={{ fontFamily: MARKER, fontSize: 64, color: C.rust, marginRight: 22 }}>{n}.</span>
+        <span style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 64, color: C.rust, marginRight: 22 }}>{n}.</span>
       )}
-      <span style={{ fontFamily: MARKER, fontSize: 82, color: C.ink }}>{text}</span>
+      <span style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 82, color: C.ink }}>{text}</span>
     </div>
   );
 };
@@ -31,7 +31,7 @@ const Verdict: React.FC<{ v: string; p: number; size?: number }> = ({ v, p, size
         border: `4px solid ${col}`,
         borderRadius: 8,
         color: col,
-        fontFamily: MARKER,
+        fontFamily: MARKER, fontWeight: 800, letterSpacing: -1,
         fontSize: size,
         opacity: clamp(p * 2),
         transform: `scale(${1.5 - 0.5 * clamp(p)}) rotate(-4deg)`,
@@ -54,7 +54,7 @@ export const Hook: React.FC<P> = ({ t }) => {
         {H.lines.map(([at, text], i) => {
           const p = ramp(t, at as number, 0.3);
           return (
-            <div key={i} style={{ fontFamily: MARKER, fontSize: 70, color: i ? C.rust : C.ink, opacity: p, transform: `translateY(${(1 - p) * 20}px)` }}>
+            <div key={i} style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 70, color: i ? C.rust : C.ink, opacity: p, transform: `translateY(${(1 - p) * 20}px)` }}>
               {text as string}
             </div>
           );
@@ -68,7 +68,7 @@ export const Hook: React.FC<P> = ({ t }) => {
           const p = pop(t, at as number, 0.3);
           return (
             <div key={i} style={{ opacity: clamp(p * 3), transform: `scale(${p})` }}>
-              <div style={{ fontFamily: MARKER, fontSize: 126, color: C.ink, lineHeight: 1, whiteSpace: "nowrap" }}>{big as string}</div>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 126, color: C.ink, lineHeight: 1, whiteSpace: "nowrap" }}>{big as string}</div>
               <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 40, color: C.soft }}>{i ? "per check" : "median answer"}</div>
             </div>
           );
@@ -111,7 +111,7 @@ export const Gate: React.FC<P> = ({ t }) => {
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 790, textAlign: "center", opacity: ramp(t, G.caption, 0.35) }}>
         <div style={{ display: "inline-block" }}>
-          <div style={{ fontFamily: MARKER, fontSize: 62, color: C.ink }}>Hard rules first. Jev for the long tail.</div>
+          <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 62, color: C.ink }}>Hard rules first. Jev for the long tail.</div>
           <Underline width={1150} p={ramp(t, G.caption + 0.25, 0.5)} />
         </div>
       </div>
@@ -133,7 +133,7 @@ export const Attack: React.FC<P> = ({ t }) => {
         const p = ramp(t, at as number, 0.5);
         return (
           <div key={i} style={{ ...abs, left: 230, top: 370 + i * 190, opacity: clamp(p * 3) }}>
-            <div style={{ fontFamily: MARKER, fontSize: 50, color: C.ink }}>{label as string}</div>
+            <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 50, color: C.ink }}>{label as string}</div>
             <div style={{ display: "flex", gap: 10, marginTop: 14, alignItems: "center" }}>
               {Array.from({ length: 30 }, (_, k) => {
                 const on = k < (through as number) && p > k / 30;
@@ -151,7 +151,7 @@ export const Attack: React.FC<P> = ({ t }) => {
                   />
                 );
               })}
-              <div style={{ fontFamily: MARKER, fontSize: 64, color: (through as number) ? C.rust : C.green, marginLeft: 30, opacity: p }}>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 64, color: (through as number) ? C.rust : C.green, marginLeft: 30, opacity: p }}>
                 {through as number} / 30
               </div>
             </div>
@@ -159,7 +159,7 @@ export const Attack: React.FC<P> = ({ t }) => {
         );
       })}
       <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", transform: `scale(${pop(t, A.punch, 0.4)})` }}>
-        <div style={{ fontFamily: MARKER, fontSize: 70, color: C.ink }}>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 70, color: C.ink }}>
           Shouting doesn't get in. <span style={{ color: C.rust }}>Politeness does.</span>
         </div>
         <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 38, color: C.soft, marginTop: 8 }}>
@@ -259,17 +259,17 @@ export const Review: React.FC<P> = ({ t }) => {
         );
       })}
       <div style={{ ...abs, left: 0, right: 0, top: 560, textAlign: "center", transform: `scale(${count})`, opacity: clamp(count * 2) }}>
-        <div style={{ fontFamily: MARKER, fontSize: 84, color: C.ink }}>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 84, color: C.ink }}>
           A filename rule waved <span style={{ color: C.rust }}>13 CVE fixes</span> through.
         </div>
-        <div style={{ fontFamily: MARKER, fontSize: 84, color: C.green }}>review-router sent all 13 to full review.</div>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 84, color: C.green }}>review-router sent all 13 to full review.</div>
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 820, display: "flex", justifyContent: "center", gap: 120 }}>
         {[["42%", "of 561 commits still skip"], ["$0.029", "for the whole run"]].map(([big, small], i) => {
           const p = pop(t, R.stats[i], 0.3);
           return (
             <div key={big} style={{ textAlign: "center", transform: `scale(${p})`, opacity: clamp(p * 3) }}>
-              <div style={{ fontFamily: MARKER, fontSize: 96, color: C.ink, lineHeight: 1 }}>{big}</div>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 96, color: C.ink, lineHeight: 1 }}>{big}</div>
               <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 34, color: C.soft }}>{small}</div>
             </div>
           );
@@ -313,7 +313,7 @@ export const Cases: React.FC<P> = ({ t }) => {
               }}
             >
               <div style={{ fontFamily: i < 3 ? HAND : MONO, fontWeight: 700, fontSize: 38, color: C.ink }}>{name}</div>
-              <div style={{ fontFamily: MARKER, fontSize: 54, color: C.rust, lineHeight: 1.3, whiteSpace: "nowrap" }}>{big}</div>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 54, color: C.rust, lineHeight: 1.3, whiteSpace: "nowrap" }}>{big}</div>
               <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 30, color: C.soft }}>{small}</div>
             </div>
           );
@@ -338,7 +338,7 @@ export const RepoOutro: React.FC<P> = ({ t }) => {
     <div style={{ ...abs, inset: 0, opacity: a }}>
       <div style={{ ...abs, left: 0, right: 0, top: 150, textAlign: "center", transform: `scale(${title})`, opacity: clamp(title * 2) }}>
         <div style={{ display: "inline-block" }}>
-          <div style={{ fontFamily: MARKER, fontSize: 150, color: C.ink }}>jev-engineering</div>
+          <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 150, color: C.ink }}>jev-engineering</div>
           <Underline width={1150} p={ramp(t, O.title + 0.25, 0.5)} />
         </div>
         <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 52, color: C.ink, marginTop: 6 }}>the decision layer for AI agents</div>
@@ -376,7 +376,7 @@ export const RepoPoster: React.FC = () => (
   <div style={{ ...abs, inset: 0 }}>
     <div style={{ ...abs, left: 0, right: 0, top: 150, textAlign: "center" }}>
       <div style={{ display: "inline-block" }}>
-        <div style={{ fontFamily: MARKER, fontSize: 160, color: C.ink }}>jev-engineering</div>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 160, color: C.ink }}>jev-engineering</div>
         <Underline width={1230} p={1} />
       </div>
       <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 58, color: C.ink }}>the decision layer for AI agents</div>
@@ -384,7 +384,7 @@ export const RepoPoster: React.FC = () => (
     <div style={{ ...abs, left: 0, right: 0, top: 620, display: "flex", justifyContent: "center", gap: 60 }}>
       {[["371ms", "per decision"], ["$0.0000189", "per check"], ["13 / 13", "CVE fixes caught"]].map(([big, small]) => (
         <div key={big} style={{ textAlign: "center", padding: "20px 36px", border: `4px solid ${C.ink}`, borderRadius: 16, background: C.card, boxShadow: `7px 7px 0 ${C.ink}` }}>
-          <div style={{ fontFamily: MARKER, fontSize: 84, color: C.rust, lineHeight: 1.1 }}>{big}</div>
+          <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 84, color: C.rust, lineHeight: 1.1 }}>{big}</div>
           <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 34, color: C.ink }}>{small}</div>
         </div>
       ))}

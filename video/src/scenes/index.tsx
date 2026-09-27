@@ -19,7 +19,7 @@ const Title: React.FC<{ children: React.ReactNode; p: number; top?: number; size
       left: 0,
       right: 0,
       textAlign: "center",
-      fontFamily: MARKER,
+      fontFamily: MARKER, fontWeight: 800, letterSpacing: -1,
       fontSize: size,
       color,
       opacity: clamp(p * 2),
@@ -46,7 +46,7 @@ export const Problem: React.FC<P> = ({ t }) => {
           flexWrap: "wrap",
           justifyContent: "center",
           gap: "0 28px",
-          fontFamily: MARKER,
+          fontFamily: MARKER, fontWeight: 800, letterSpacing: -1,
           fontSize: 96,
           color: C.ink,
         }}
@@ -65,7 +65,7 @@ export const Problem: React.FC<P> = ({ t }) => {
           const p = pop(t, at as number, 0.28);
           return (
             <div key={i} style={{ textAlign: "center", opacity: clamp(p * 3), transform: `scale(${p * 1.0}) rotate(${wobble(i + 7, 3)}deg)` }}>
-              <div style={{ fontFamily: MARKER, fontSize: 150, color: C.rust }}>{w as string}</div>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 150, color: C.rust }}>{w as string}</div>
               <div style={{ fontFamily: MONO, fontSize: 30, color: C.soft }}>full re-read #{i + 1}</div>
             </div>
           );
@@ -104,7 +104,7 @@ export const Rule: React.FC<P> = ({ t }) => {
           lineHeight: 1.45,
         }}
       >
-        <div style={{ fontFamily: MARKER, fontSize: 40, marginBottom: 10, whiteSpace: "nowrap" }}>Full review if the path is:</div>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 40, marginBottom: 10, whiteSpace: "nowrap" }}>Full review if the path is:</div>
         {[".github/workflows/", "auth*, login*, token*", "migrations/", "package.json, Dockerfile"].map((r) => (
           <div key={r} style={{ fontFamily: MONO, fontSize: 30, fontWeight: 500 }}>
             • {r}
@@ -147,7 +147,7 @@ export const Rule: React.FC<P> = ({ t }) => {
       })}
       <div style={{ ...abs, left: 0, right: 0, top: 830, textAlign: "center", opacity: clamp(cap * 2) }}>
         <div style={{ display: "inline-block" }}>
-          <div style={{ fontFamily: MARKER, fontSize: 80, color: C.ink }}>13 CVE fixes. Waved through.</div>
+          <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 80, color: C.ink }}>13 CVE fixes. Waved through.</div>
           <Underline width={1120} p={ramp(t, R.caption + 0.3, 0.5)} />
         </div>
       </div>
@@ -270,7 +270,7 @@ export const Diff: React.FC<P> = ({ t }) => {
           border: `6px solid ${C.rust}`,
           borderRadius: 10,
           color: C.rust,
-          fontFamily: MARKER,
+          fontFamily: MARKER, fontWeight: 800, letterSpacing: -1,
           fontSize: 64,
           opacity: clamp(verdict * 2),
           transform: `scale(${1.6 - 0.6 * clamp(verdict)}) rotate(-6deg)`,
@@ -312,10 +312,10 @@ export const Route: React.FC<P> = ({ t }) => {
       <div style={{ ...abs, left: 250, top: 500, transform: `scale(${pop(t, R.fork - 0.1, 0.4)})` }}>
         <Burst size={130} spin={t * 0.8} />
       </div>
-      <div style={{ ...abs, left: 1530, top: 205, fontFamily: MARKER, fontSize: 58, color: C.gray, opacity: draw }}>
+      <div style={{ ...abs, left: 1530, top: 205, fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 58, color: C.gray, opacity: draw }}>
         QUICK
       </div>
-      <div style={{ ...abs, left: 1440, top: 830, fontFamily: MARKER, fontSize: 62, color: C.green, opacity: draw, whiteSpace: "nowrap" }}>
+      <div style={{ ...abs, left: 1440, top: 830, fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 62, color: C.green, opacity: draw, whiteSpace: "nowrap" }}>
         FULL REVIEW
       </div>
       {R.safe.map((at, i) => {
@@ -330,7 +330,7 @@ export const Route: React.FC<P> = ({ t }) => {
         const { x, y } = along(p, false);
         return <FileCard key={i} name={`CVE fix ${i + 1}`} x={x} y={y} scale={0.7} rot={wobble(i + 11, 5)} stamp={1} opacity={1 - clamp((p - 0.9) * 10)} />;
       })}
-      <div style={{ ...abs, left: 0, right: 0, top: 70, textAlign: "center", fontFamily: MARKER, fontSize: 84, color: C.ink }}>
+      <div style={{ ...abs, left: 0, right: 0, top: 70, textAlign: "center", fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 84, color: C.ink }}>
         <span style={{ display: "inline-block", transform: `scale(${1 + 0.25 * (total > 0 ? Math.max(0, 1.2 - total) : 0)})`, color: t >= R.total ? C.rust : C.ink }}>
           {t >= R.total ? 13 : done} / 13
         </span>{" "}
@@ -361,7 +361,7 @@ export const Bench: React.FC<P> = ({ t }) => {
           const p = pop(t, B.slams[i], 0.3);
           return (
             <div key={big} style={{ opacity: clamp(p * 3), transform: `scale(${p}) rotate(${wobble(i + 50, 1.5)}deg)` }}>
-              <div style={{ fontFamily: MARKER, fontSize: 176, lineHeight: 1, color: i === 2 ? C.rust : C.ink }}>{big}</div>
+              <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 176, lineHeight: 1, color: i === 2 ? C.rust : C.ink }}>{big}</div>
               <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 40, color: C.ink, marginTop: 10 }}>{small}</div>
             </div>
           );
@@ -398,7 +398,7 @@ export const Outro: React.FC<P> = ({ t }) => {
     <div style={{ ...abs, inset: 0, opacity: a }}>
       <div style={{ ...abs, left: 0, right: 0, top: 170, textAlign: "center", transform: `scale(${title})`, opacity: clamp(title * 2) }}>
         <div style={{ display: "inline-block" }}>
-          <div style={{ fontFamily: MARKER, fontSize: 150, color: C.ink }}>review-router</div>
+          <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 150, color: C.ink }}>review-router</div>
           <Underline width={980} p={ramp(t, O.title + 0.25, 0.5)} />
         </div>
         <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 52, color: C.ink, marginTop: 6 }}>
@@ -449,8 +449,8 @@ export const PosterArt: React.FC = () => (
   <div style={{ ...abs, inset: 0 }}>
     <div style={{ ...abs, left: 0, right: 0, top: 90, textAlign: "center" }}>
       <div style={{ display: "inline-block" }}>
-        <div style={{ fontFamily: MARKER, fontSize: 138, color: C.ink, lineHeight: 1.05 }}>13 CVE fixes</div>
-        <div style={{ fontFamily: MARKER, fontSize: 138, color: C.ink, lineHeight: 1.05 }}>looked harmless</div>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 138, color: C.ink, lineHeight: 1.05 }}>13 CVE fixes</div>
+        <div style={{ fontFamily: MARKER, fontWeight: 800, letterSpacing: -1, fontSize: 138, color: C.ink, lineHeight: 1.05 }}>looked harmless</div>
         <Underline width={1100} p={1} />
       </div>
     </div>
