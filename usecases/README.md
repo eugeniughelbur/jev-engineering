@@ -16,6 +16,13 @@ Every folder follows the same shape:
 | [inbox-triage](inbox-triage/) | Which emails need me now? | 16 of 16 examples, $0.0003 |
 | [ai-writing-tells](ai-writing-tells/) | Which paragraphs read like AI wrote them, and why? | 12 of 12 examples, 2 false alarms in 40 real paragraphs |
 | [slack-followups](slack-followups/) | Which messages across every channel are waiting on me? | 14 of 14 examples, $0.0002 |
+| [outbound-check](outbound-check/) | Should the agent send this email or Slack message, or hold it for me? | All 8 risky drafts held, 1 false alarm in 16, $0.0003 |
+
+### Tried, not ready
+
+| Use case | The decision | Why not |
+|---|---|---|
+| [ci-test-selection](ci-test-selection/) | Which test files does this commit need? | 58% recall on unseen FastAPI commits. The write-up says why and what would work better |
 
 All four use the same move: split one fuzzy question into a few yes/no checks with plain definitions, let Jev score them in parallel, and combine the scores in code you can read. The shared helper is [jevchecks.py](jevchecks.py), standard library only.
 

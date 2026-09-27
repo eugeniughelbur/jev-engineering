@@ -157,6 +157,7 @@ The gate answers one question. [usecases/](usecases/) holds the decisions around
 | [Inbox triage](usecases/inbox-triage/) | 16 of 16 emails sorted right for $0.0003 |
 | [AI writing tells](usecases/ai-writing-tells/) | Names the tell in each flagged paragraph. 2 false alarms in 40 real paragraphs |
 | [Slack follow-ups](usecases/slack-followups/) | 14 of 14 messages sorted right for $0.0002 |
+| [Outbound check](usecases/outbound-check/) | Holds risky emails and Slack messages before they send. All 8 risky drafts held, 1 false alarm in 16 |
 
 ## Three commands
 
