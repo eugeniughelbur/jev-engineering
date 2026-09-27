@@ -2,6 +2,8 @@ import React from "react";
 import { Composition } from "remotion";
 import { CUES } from "./lib/anim";
 import repoCues from "./cues-repo.json";
+import launchCues from "./cues-launch.json";
+import { Launch } from "./launch/Launch";
 import { Poster, Reel, RepoPosterStill, RepoReel } from "./Reel";
 
 export const Root: React.FC = () => (
@@ -23,6 +25,14 @@ export const Root: React.FC = () => (
       height={1080}
     />
     <Composition id="RepoPoster" component={RepoPosterStill} durationInFrames={1} fps={repoCues.fps} width={1920} height={1080} />
+    <Composition
+      id="Launch"
+      component={Launch}
+      durationInFrames={Math.round((launchCues.pre + launchCues.duration) * launchCues.fps)}
+      fps={launchCues.fps}
+      width={1920}
+      height={1080}
+    />
     <Composition id="Poster" component={Poster} durationInFrames={1} fps={CUES.fps} width={1920} height={1080} />
   </>
 );

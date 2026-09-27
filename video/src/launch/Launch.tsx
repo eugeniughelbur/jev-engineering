@@ -1,0 +1,572 @@
+// The launch reel: one product, one message, in six scenes.
+//   problem -> reveal -> how it works -> powered by Jev -> one chart -> install
+// Every number is from the repo README.
+
+import React from "react";
+import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
+import cues from "../cues-launch.json";
+import { backOut, clamp, easeInOut, easeOut, pop, ramp, sceneAlpha } from "../lib/anim";
+import { MARKER as HEAD, MONO, abs } from "../lib/ui";
+
+const S = cues.scene;
+const W = 1920;
+const H = 1080;
+
+const K = {
+  light: "#F3EDE2",
+  dark: "#111214",
+  ink: "#15171C",
+  soft: "rgba(21,23,28,0.55)",
+  faint: "rgba(21,23,28,0.12)",
+  cream: "#F3EDE2",
+  creamSoft: "rgba(243,237,226,0.55)",
+  creamFaint: "rgba(243,237,226,0.12)",
+  rust: "#E0602F",
+  rustDeep: "#C8512A",
+  green: "#3BAA6E",
+};
+
+const bold = (size: number, color: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
+  fontFamily: HEAD,
+  fontWeight: 800,
+  fontSize: size,
+  letterSpacing: -size * 0.025,
+  color,
+  lineHeight: 1.05,
+  ...extra,
+});
+const mono = (size: number, color: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
+  fontFamily: MONO,
+  fontSize: size,
+  color,
+  ...extra,
+});
+
+// ------------------------------------------------------------ chrome
+const Backdrop: React.FC<{ dark: boolean; frame: number }> = ({ dark, frame }) => (
+  <>
+    <div style={{ ...abs, inset: 0, background: dark ? K.dark : K.light }} />
+    <div
+      style={{
+        ...abs,
+        inset: 0,
+        background: dark
+          ? "radial-gradient(ellipse at 50% 55%, rgba(224,96,47,0.16), transparent 60%)"
+          : "radial-gradient(ellipse at 50% 45%, rgba(255,255,255,0.7), transparent 65%)",
+      }}
+    />
+    <div style={{ ...abs, inset: 0, background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.18))" }} />
+    <svg style={{ ...abs, inset: 0, mixBlendMode: "overlay", opacity: dark ? 0.35 : 0.22 }} width={W} height={H}>
+      <filter id="g">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} seed={Math.floor(frame / 2) % 40} />
+        <feColorMatrix type="saturate" values="0" />
+      </filter>
+      <rect width="100%" height="100%" filter="url(#g)" />
+    </svg>
+  </>
+);
+
+const Hud: React.FC<{ t: number; dark: boolean; label: string }> = ({ t, dark, label }) => {
+  const c = dark ? K.creamSoft : K.soft;
+  const mark = (x: number, y: number, dx: number, dy: number) => (
+    <path d={`M${x} ${y + dy * 22} V${y} H${x + dx * 22}`} fill="none" stroke={c} strokeWidth={2} />
+  );
+  const secs = Math.max(0, t);
+  const tc = `00:${String(Math.floor(secs)).padStart(2, "0")}:${String(Math.floor((secs % 1) * 30)).padStart(2, "0")}`;
+  return (
+    <>
+      <svg style={abs} width={W} height={H}>
+        {mark(40, 40, 1, 1)}
+        {mark(1880, 40, -1, 1)}
+        {mark(40, 1040, 1, -1)}
+        {mark(1880, 1040, -1, -1)}
+      </svg>
+      <div style={{ ...abs, left: 72, top: 46, ...mono(16, c, { letterSpacing: 3 }) }}>
+        JEV-ENGINEERING <span style={{ color: K.rust }}>●</span> gate
+      </div>
+      <div style={{ ...abs, right: 72, top: 46, ...mono(16, c, { letterSpacing: 3 }) }}>
+        {label} · {tc}
+      </div>
+      <div style={{ ...abs, left: 72, right: 72, bottom: 58, height: 2, background: dark ? K.creamFaint : K.faint }}>
+        <div style={{ width: `${clamp(t / cues.duration) * 100}%`, height: 2, background: K.rust }} />
+      </div>
+    </>
+  );
+};
+
+const Wordmark: React.FC<{ size: number; color?: string }> = ({ size, color = K.ink }) => (
+  <div style={{ position: "relative", display: "inline-block", ...bold(size, color) }}>
+    <span style={{ position: "absolute", left: size * 0.02, top: -size * 0.12, width: size * 0.16, height: size * 0.16, borderRadius: "50%", background: K.rust }} />
+    jev-engineering
+  </div>
+);
+
+const Terminal: React.FC<{ width: number; children: React.ReactNode; dim?: number; title?: string }> = ({ width, children, dim = 1, title = "~/my-project — zsh" }) => (
+  <div
+    style={{
+      width,
+      background: "#16181C",
+      borderRadius: 16,
+      boxShadow: "0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset",
+      overflow: "hidden",
+      opacity: dim,
+    }}
+  >
+    <div style={{ height: 44, display: "flex", alignItems: "center", gap: 10, paddingLeft: 18, background: "#1D2025" }}>
+      {["#E0602F", "#E9B949", "#3BAA6E"].map((c) => (
+        <div key={c} style={{ width: 13, height: 13, borderRadius: 7, background: c }} />
+      ))}
+      <span style={{ ...mono(16, "rgba(243,237,226,0.45)"), marginLeft: 12 }}>{title}</span>
+    </div>
+    <div style={{ padding: "26px 30px", ...mono(30, K.cream, { lineHeight: 1.65 }) }}>{children}</div>
+  </div>
+);
+
+const Caret: React.FC<{ t: number }> = ({ t }) => (
+  <span style={{ display: "inline-block", width: 16, height: 34, marginLeft: 4, verticalAlign: "-6px", background: K.rust, opacity: Math.floor(t * 3) % 2 ? 1 : 0.15 }} />
+);
+
+// ------------------------------------------------------------ 1. problem
+const COMMANDS = [
+  "npm install", "git status", "rm -rf ./build", "ls -la", "git push", "curl … | bash", "pytest -q", "cat .env",
+  "docker compose up", "git stash clear", "npm run dev", "psql prod", "git rebase -i", "chmod -R 777 .", "make deploy", "kubectl get pods",
+  "sed -i …", "brew upgrade", "git reset --hard", "aws s3 rm …", "pip install -U", "ssh prod", "yarn build", "terraform apply",
+];
+
+const Problem: React.FC<{ t: number }> = ({ t }) => {
+  const P = cues.problem;
+  const a = sceneAlpha(t, S.problem, S.reveal, 0.15);
+  const implode = ramp(t, P.implode, 0.4, easeInOut);
+  const approvals = Math.round(40 * clamp((t - 0.6) / 2.8));
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <div style={{ ...abs, left: 120, top: 120, width: 1680, height: 520 }}>
+        {COMMANDS.map((cmd, i) => {
+          const col = i % 6;
+          const row = Math.floor(i / 6);
+          const x = col * 282;
+          const y = row * 128;
+          const idx = P.prompts.indexOf(P.prompts[i % P.prompts.length]);
+          const at = P.prompts[i % P.prompts.length] + (i >= P.prompts.length ? 0.07 : 0);
+          const on = t >= at;
+          const fresh = clamp(1 - (t - at) / 0.45);
+          const cx = 840 - 130;
+          const cy = 260 - 30;
+          const ix = x + (cx - x) * implode;
+          const iy = y + (cy - y) * implode;
+          return (
+            <div
+              key={i}
+              style={{
+                ...abs,
+                left: ix,
+                top: iy,
+                transform: `scale(${1 - implode * 0.8})`,
+                opacity: (0.35 + 0.65 * ramp(t, 0.1 + i * 0.02, 0.3)) * (1 - implode * 0.9),
+              }}
+            >
+              <div
+                data-i={idx}
+                style={{
+                  width: 268,
+                  height: 64,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  borderRadius: 12,
+                  border: `2px solid ${on ? K.ink : K.faint}`,
+                  background: on ? "#FFFFFF" : "rgba(255,255,255,0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  paddingLeft: 18,
+                  ...mono(22, on ? K.ink : K.soft),
+                  boxShadow: on ? "0 8px 22px rgba(0,0,0,0.08)" : "none",
+                }}
+              >
+                <span style={{ color: K.rust, marginRight: 8 }}>$</span>
+                {cmd}
+              </div>
+              {on && (
+                <div
+                  style={{
+                    ...abs,
+                    right: -12,
+                    top: -22,
+                    padding: "4px 12px",
+                    borderRadius: 8,
+                    background: fresh > 0 ? K.rust : K.ink,
+                    ...mono(17, "#FFF", { fontWeight: 700 }),
+                    transform: `scale(${0.8 + 0.3 * fresh})`,
+                  }}
+                >
+                  {fresh > 0 ? "Allow? y/n" : "✓ approved"}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ ...abs, left: 120, top: 720, opacity: 1 - implode * 0.4 }}>
+        {[P.words.slice(0, 4), P.words.slice(4)].map((line, li) => (
+          <div key={li} style={{ display: "flex", gap: 20, ...bold(li ? 64 : 84, li ? K.soft : K.ink) }}>
+            {line.map(([at, w], wi) => {
+              const p = ramp(t, at as number, 0.22);
+              return (
+                <span key={wi} style={{ opacity: p, transform: `translateY(${(1 - p) * 18}px)`, color: w === "permission" ? K.rust : undefined }}>
+                  {w as string}
+                </span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div style={{ ...abs, right: 120, top: 700, textAlign: "right" }}>
+        <div style={mono(16, K.soft, { letterSpacing: 3 })}>APPROVALS CLICKED THIS HOUR</div>
+        <div style={bold(110, K.ink, { fontFamily: MONO, fontWeight: 700, letterSpacing: -2 })}>{approvals}</div>
+        <div style={{ height: 4, background: K.rust, width: `${approvals * 2.5}%`, marginLeft: "auto" }} />
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ 2. reveal
+const CMD = 'jev-gate --explain "git push --force origin main"';
+const Reveal: React.FC<{ t: number }> = ({ t }) => {
+  const R = cues.reveal;
+  const a = sceneAlpha(t, S.reveal, S.how, 0.2);
+  const logo = pop(t, R.logo, 0.6);
+  const shrink = ramp(t, R.shrink, 0.5, easeInOut);
+  const typed = Math.round(CMD.length * clamp((t - R.type_start) / (R.type_end - R.type_start)));
+  const out = (k: number) => ramp(t, R.output + k * 0.12, 0.2);
+  const rows: [string, string, string][] = [
+    ["verdict", "deny", K.rust],
+    ["reason", "destructive p=0.94", K.cream],
+    ["latency", "372ms", K.cream],
+    ["cost", "$0.0000179", K.cream],
+  ];
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <div
+        style={{
+          ...abs,
+          left: 0,
+          right: 0,
+          top: 400 - shrink * 270,
+          textAlign: "center",
+          transform: `scale(${(0.85 + 0.15 * logo) * (1 - shrink * 0.45)})`,
+          opacity: clamp(logo * 2),
+        }}
+      >
+        <Wordmark size={190} />
+        <div style={{ ...bold(48, K.ink, { fontWeight: 500, letterSpacing: -0.5 }), marginTop: 18, opacity: ramp(t, R.tagline, 0.3) }}>
+          Check <span style={{ color: K.rust, fontWeight: 800 }}>every action</span> your agent takes.
+        </div>
+      </div>
+      <div style={{ ...abs, left: (W - 1180) / 2, top: 400, opacity: ramp(t, R.shrink + 0.2, 0.3), transform: `translateY(${(1 - ramp(t, R.shrink + 0.2, 0.4)) * 40}px)` }}>
+        <Terminal width={1180}>
+          <div>
+            <span style={{ color: K.rust }}>› </span>
+            {CMD.slice(0, typed)}
+            {t < R.output && <Caret t={t} />}
+          </div>
+          {rows.map(([k, v, col], i) => (
+            <div key={k} style={{ opacity: out(i), color: "rgba(243,237,226,0.5)" }}>
+              {"  "}
+              {k.padEnd(9, " ")}
+              <span style={{ color: col, fontWeight: i === 0 ? 700 : 400 }}>{v}</span>
+            </div>
+          ))}
+        </Terminal>
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ 3. how it works
+const STEPS: [string, string][] = [
+  ["Hard rules", "Plain regex denials. Never call the model."],
+  ["Fast path", "Read-only commands pass instantly."],
+  ["Jev", "One request, answered in about 371ms."],
+  ["Your thresholds", "Fitted from your own decision log."],
+];
+const GATE_X = [1100, 1300, 1500, 1700];
+const LANE_Y = [360, 560, 760];
+
+const How: React.FC<{ t: number }> = ({ t }) => {
+  const Hc = cues.how;
+  const a = sceneAlpha(t, S.how, S.jev, 0.2);
+  const active = Hc.steps.filter((s) => t >= s).length - 1;
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <div style={{ ...abs, left: 120, top: 150, ...mono(16, K.creamSoft, { letterSpacing: 3 }) }}>HOW IT WORKS · FOUR STEPS, IN THIS ORDER</div>
+      {STEPS.map(([title, desc], i) => {
+        const p = ramp(t, Hc.steps[i], 0.35);
+        const lit = i === active;
+        return (
+          <div key={title} style={{ ...abs, left: 120, top: 220 + i * 170, width: 560, opacity: p * (lit ? 1 : 0.38), transform: `translateX(${(1 - p) * -24}px)` }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
+              <span style={mono(24, K.rust, { fontWeight: 700 })}>{String(i + 1).padStart(2, "0")}</span>
+              <span style={bold(58, K.cream)}>{title}</span>
+            </div>
+            <div style={{ ...bold(26, K.creamSoft, { fontWeight: 500, letterSpacing: 0, lineHeight: 1.35 }), marginLeft: 50, marginTop: 8 }}>{desc}</div>
+            {lit && <div style={{ marginLeft: 50, marginTop: 14, width: 90, height: 3, background: K.rust }} />}
+          </div>
+        );
+      })}
+      {/* the pipeline */}
+      <svg style={abs} width={W} height={H}>
+        {LANE_Y.map((y) => (
+          <line key={y} x1={740} y1={y} x2={1800} y2={y} stroke={K.creamFaint} strokeWidth={2} strokeDasharray="6 10" />
+        ))}
+      </svg>
+      {GATE_X.map((x, i) => {
+        const on = ramp(t, Hc.steps[i], 0.3);
+        const hot = i === active;
+        return (
+          <div key={x} style={{ ...abs, left: x - 46, top: 250, width: 92, textAlign: "center", opacity: 0.25 + 0.75 * on }}>
+            <div style={mono(18, hot ? K.rust : K.creamSoft, { fontWeight: 700 })}>{String(i + 1).padStart(2, "0")}</div>
+            <div style={{ ...abs, left: 44, top: 32, width: 4, height: 560, background: hot ? K.rust : "rgba(243,237,226,0.22)", borderRadius: 2, boxShadow: hot ? "0 0 24px rgba(224,96,47,0.7)" : "none" }} />
+          </div>
+        );
+      })}
+      {Hc.cmds.map(([at, cmd, stop, verdict], lane) => {
+        const start = at as number;
+        const stopAt = stop as number;
+        const travel = easeOut(clamp((t - start) / (0.35 * stopAt + 0.2)));
+        const endX = GATE_X[stopAt - 1] - (verdict === "allow" ? -40 : 30);
+        const x = 1060 + (endX - 1060) * travel;
+        const done = travel >= 0.999;
+        const v = ramp(t, start + 0.35 * stopAt + 0.2, 0.25);
+        const col = verdict === "allow" ? K.green : K.rust;
+        if (t < start) return null;
+        return (
+          <div key={lane} style={{ ...abs, left: x, top: LANE_Y[lane] - 30, transform: "translateX(-100%)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: 10,
+                  background: "#1E2126",
+                  border: `2px solid ${done ? col : "rgba(243,237,226,0.25)"}`,
+                  ...mono(24, K.cream),
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {cmd as string}
+              </div>
+            </div>
+            <div
+              style={{
+                ...abs,
+                right: 0,
+                top: -48,
+                padding: "6px 14px",
+                borderRadius: 8,
+                background: col,
+                ...mono(22, "#FFF", { fontWeight: 700 }),
+                opacity: v,
+                transform: `scale(${0.8 + 0.2 * backOut(v)})`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {(verdict as string).toUpperCase()}
+              {stopAt === 3 ? " · p=0.94" : stopAt === 1 ? " · no model" : " · no model"}
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ ...abs, left: 760, top: 880, ...mono(22, K.creamSoft), opacity: ramp(t, Hc.thresholds, 0.3) }}>
+        deny above <span style={{ color: K.rust }}>0.90</span> · allow below <span style={{ color: K.green }}>0.10</span> · confidence under 0.45 asks you
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ 4. powered by Jev
+const ORBIT = ["gate tool calls", "review pull requests", "triage the inbox", "route models", "screen refunds"];
+const JevScene: React.FC<{ t: number }> = ({ t }) => {
+  const J = cues.jev;
+  const a = sceneAlpha(t, S.jev, S.bench, 0.2);
+  const chip = pop(t, J.chip, 0.6);
+  const c = clamp((t - J.count_from) / (J.count_to - J.count_from));
+  const checks = Math.round(500 * easeOut(c));
+  const cost = (checks * 0.0000189).toFixed(4);
+  const glow = 0.6 + 0.4 * Math.sin(t * 5);
+  const cx = W / 2;
+  const cy = 440;
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <div style={{ ...abs, left: 0, right: 0, top: 120, textAlign: "center", ...mono(16, K.creamSoft, { letterSpacing: 4 }) }}>POWERED BY</div>
+      <svg style={abs} width={W} height={H}>
+        {ORBIT.map((_, i) => {
+          const ang = -Math.PI / 2 + ((i - 2) / 2.4) * Math.PI * 0.62 + Math.PI;
+          const r = 380;
+          const x = cx + Math.cos(ang) * r * 1.35;
+          const y = cy + 40 + Math.sin(ang) * r * 0.55;
+          const p = ramp(t, J.orbit[i], 0.35);
+          return <line key={i} x1={cx} y1={cy} x2={cx + (x - cx) * p} y2={cy + (y - cy) * p} stroke="rgba(224,96,47,0.45)" strokeWidth={2} />;
+        })}
+        <circle cx={cx} cy={cy} r={170 + 8 * glow} fill="none" stroke="rgba(224,96,47,0.25)" strokeWidth={2} strokeDasharray="4 10" />
+      </svg>
+      {ORBIT.map((label, i) => {
+        const ang = -Math.PI / 2 + ((i - 2) / 2.4) * Math.PI * 0.62 + Math.PI;
+        const r = 380;
+        const x = cx + Math.cos(ang) * r * 1.35;
+        const y = cy + 40 + Math.sin(ang) * r * 0.55;
+        const p = pop(t, J.orbit[i] + 0.2, 0.35);
+        return (
+          <div key={label} style={{ ...abs, left: x, top: y, transform: `translate(-50%,-50%) scale(${p})`, padding: "10px 20px", borderRadius: 30, background: "#1E2126", border: "2px solid rgba(243,237,226,0.2)", ...mono(22, K.cream), whiteSpace: "nowrap" }}>
+            {label}
+          </div>
+        );
+      })}
+      <div
+        style={{
+          ...abs,
+          left: cx - 110,
+          top: cy - 110,
+          width: 220,
+          height: 220,
+          borderRadius: 44,
+          background: `linear-gradient(145deg, #F07A45, ${K.rustDeep})`,
+          boxShadow: `0 0 ${80 + 40 * glow}px rgba(224,96,47,0.55), 0 0 0 2px rgba(255,255,255,0.18) inset`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: `scale(${chip})`,
+          ...bold(78, "#FFF6EE"),
+        }}
+      >
+        Jev
+      </div>
+      <div style={{ ...abs, left: 120, top: 180 }}>
+        <div style={mono(16, K.creamSoft, { letterSpacing: 3 })}>CHECKS</div>
+        <div style={mono(64, K.cream, { fontWeight: 700 })}>{checks}</div>
+      </div>
+      <div style={{ ...abs, right: 120, top: 180, textAlign: "right" }}>
+        <div style={mono(16, K.creamSoft, { letterSpacing: 3 })}>TOTAL COST</div>
+        <div style={mono(64, K.rust, { fontWeight: 700 })}>${cost}</div>
+      </div>
+      <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", opacity: ramp(t, J.title, 0.35), transform: `translateY(${(1 - ramp(t, J.title, 0.4)) * 20}px)` }}>
+        <div style={bold(76, K.cream)}>
+          One model. <span style={{ color: K.rust }}>Every decision.</span>
+        </div>
+        <div style={{ ...bold(28, K.creamSoft, { fontWeight: 500, letterSpacing: 0 }), marginTop: 14 }}>
+          Jev answers typed questions with probabilities, not text. That's why it's fast and cheap.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ 5. one chart
+const Bench: React.FC<{ t: number }> = ({ t }) => {
+  const B = cues.bench;
+  const a = sceneAlpha(t, S.bench, S.outro, 0.2);
+  const grow = ramp(t, B.bars, 1.1, easeOut);
+  const slam = pop(t, B.slam, 0.35);
+  const chatW = 1000 * grow;
+  const jevW = Math.max(6, 1000 * (0.00945 / 15) * grow);
+  const shards = Array.from({ length: 16 }, (_, i) => i);
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <div style={{ ...abs, left: 120, top: 130, ...mono(16, K.soft, { letterSpacing: 3 }) }}>COST OF CHECKING 500 AGENT ACTIONS A DAY</div>
+      <div style={{ ...abs, left: 120, top: 175, ...bold(64, K.ink), opacity: ramp(t, B.title, 0.3) }}>
+        Asking a chat model "is this safe?" vs asking <span style={{ color: K.rust }}>Jev</span>.
+      </div>
+      <div style={{ ...abs, left: 500, top: 360, width: 2, height: 330, background: K.ink }} />
+      {[
+        ["Chat model", "about 3¢ and 4s a call", chatW, K.ink, "$15.00"],
+        ["Jev", "$0.0000189 and 371ms a call", jevW, K.rust, "$0.0095"],
+      ].map(([name, sub, w, col, val], i) => (
+        <div key={name as string} style={{ ...abs, left: 120, top: 400 + i * 150, display: "flex", alignItems: "center" }}>
+          <div style={{ width: 380 }}>
+            <div style={bold(40, i ? K.rust : K.ink)}>{name as string}</div>
+            <div style={mono(18, K.soft)}>{sub as string}</div>
+          </div>
+          <div style={{ width: w as number, height: 88, background: col as string, borderRadius: 4 }} />
+          <div style={{ ...bold(62, i ? K.rust : K.ink, { fontFamily: MONO, fontWeight: 700, letterSpacing: -1 }), marginLeft: 26, opacity: clamp(grow * 2) }}>{val as string}</div>
+        </div>
+      ))}
+      <div style={{ ...abs, left: 1300, top: 610, transform: `translate(-50%,-50%) scale(${slam}) rotate(-4deg)`, opacity: clamp(slam * 3), ...bold(112, K.rust), whiteSpace: "nowrap" }}>
+        ~1,500× cheaper
+      </div>
+      {shards.map((i) => {
+        const p = clamp((t - B.slam) / 0.9);
+        if (p <= 0 || p >= 1) return null;
+        const ang = (i / shards.length) * Math.PI * 2;
+        const d = 120 + 420 * easeOut(p);
+        return (
+          <div key={i} style={{ ...abs, left: 1300 + Math.cos(ang) * d, top: 610 + Math.sin(ang) * d * 0.6 + p * p * 120, width: 18, height: 18, background: i % 3 ? K.ink : K.rust, transform: `rotate(${ang * 90 + p * 300}deg)`, opacity: 1 - p }} />
+        );
+      })}
+      <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", opacity: ramp(t, B.caption, 0.35), ...bold(56, K.ink) }}>
+        Cheap enough to <span style={{ color: K.rust }}>check everything</span>.
+      </div>
+      <div style={{ ...abs, left: 0, right: 0, top: 900, textAlign: "center", opacity: ramp(t, B.fine, 0.4), ...mono(17, K.soft) }}>
+        Chat model: the README's estimate of about 3¢ and 4s per call. Jev: $0.0000189 and 371ms median, measured over 300 calls.
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ 6. install
+const INSTALL = "claude plugin install jev-engineering@jev-engineering";
+const Outro: React.FC<{ t: number }> = ({ t }) => {
+  const O = cues.outro;
+  const a = sceneAlpha(t, S.outro, S.end + 1, 0.25);
+  const logo = pop(t, O.logo, 0.5);
+  const typed = Math.round(INSTALL.length * clamp((t - O.type_start) / (O.type_end - O.type_start)));
+  return (
+    <div style={{ ...abs, inset: 0, opacity: a }}>
+      <svg style={{ ...abs, opacity: 0.5 }} width={W} height={H}>
+        {[180, 420, 1500, 1740].map((x, i) => (
+          <path key={x} d={`M${x} 120 V${300 + i * 60} H${x + (i < 2 ? 140 : -140)} V980`} fill="none" stroke={K.faint} strokeWidth={2} />
+        ))}
+      </svg>
+      <div style={{ ...abs, left: 0, right: 0, top: 290, textAlign: "center", transform: `scale(${0.9 + 0.1 * logo})`, opacity: clamp(logo * 2) }}>
+        <Wordmark size={170} />
+        <div style={{ ...bold(50, K.ink, { fontWeight: 500, letterSpacing: -0.5 }), marginTop: 16, opacity: ramp(t, O.tagline, 0.3) }}>
+          Check everything. <span style={{ color: K.rust, fontWeight: 800 }}>Block what matters.</span>
+        </div>
+      </div>
+      <div style={{ ...abs, left: 0, right: 0, top: 640, display: "flex", justifyContent: "center", opacity: ramp(t, O.type_start - 0.2, 0.25) }}>
+        <div style={{ padding: "18px 30px", borderRadius: 12, background: "#16181C", ...mono(32, K.cream) }}>
+          <span style={{ color: K.rust }}>› </span>
+          {INSTALL.slice(0, typed)}
+          <Caret t={t} />
+        </div>
+      </div>
+      <div style={{ ...abs, left: 0, right: 0, top: 790, textAlign: "center", opacity: ramp(t, O.meta, 0.35), ...mono(24, K.soft) }}>
+        github.com/eugeniughelbur/jev-engineering · MIT · tested against 300 attacks
+      </div>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------ the reel
+const SCENES: { from: number; to: number; dark: boolean; label: string; C: React.FC<{ t: number }> }[] = [
+  { from: S.problem, to: S.reveal, dark: false, label: cues.labels.problem, C: Problem },
+  { from: S.reveal, to: S.how, dark: false, label: cues.labels.reveal, C: Reveal },
+  { from: S.how, to: S.jev, dark: true, label: cues.labels.how, C: How },
+  { from: S.jev, to: S.bench, dark: true, label: cues.labels.jev, C: JevScene },
+  { from: S.bench, to: S.outro, dark: false, label: cues.labels.bench, C: Bench },
+  { from: S.outro, to: S.end + 1, dark: false, label: cues.labels.outro, C: Outro },
+];
+
+export const Launch: React.FC = () => {
+  const frame = useCurrentFrame();
+  // The first PRE seconds hold the reveal, because feeds thumbnail an early frame.
+  const raw = frame / cues.fps - cues.pre;
+  const t = raw < 0 ? 7.8 : raw;
+  const current = SCENES.find((s) => t >= s.from && t < s.to) ?? SCENES[SCENES.length - 1];
+  return (
+    <AbsoluteFill>
+      <Backdrop dark={current.dark} frame={frame} />
+      {SCENES.filter((s) => t >= s.from - 0.3 && t <= s.to + 0.3).map(({ from, C }) => (
+        <C key={from} t={t} />
+      ))}
+      <Hud t={raw < 0 ? 0 : t} dark={current.dark} label={current.label} />
+      <Audio src={staticFile("music-launch.wav")} />
+    </AbsoluteFill>
+  );
+};

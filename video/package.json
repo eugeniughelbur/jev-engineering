@@ -10,7 +10,8 @@
     "draft": "npm run music && remotion render src/index.ts Reel out/draft.mp4 --scale=0.5",
     "poster": "remotion still src/index.ts Poster out/poster.png",
     "check-types": "tsc -p .",
-    "render-repo": "uv run --with numpy scripts/music.py src/cues-repo.json music-repo.wav && remotion render src/index.ts RepoReel out/jev-engineering.mp4 --crf=16 --audio-bitrate=320k"
+    "render-repo": "uv run --with numpy scripts/music.py src/cues-repo.json music-repo.wav && remotion render src/index.ts RepoReel out/jev-engineering.mp4 --crf=16 --audio-bitrate=320k",
+    "render-launch": "uv run --with numpy scripts/music.py src/cues-launch.json music-launch.wav && remotion render src/index.ts Launch out/launch.mp4 --crf=16 --audio-bitrate=320k"
   },
   "dependencies": {
     "@remotion/cli": "4.0.529",
