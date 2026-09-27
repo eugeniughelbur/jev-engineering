@@ -22,6 +22,7 @@ const K = {
   creamSoft: "rgba(243,237,226,0.55)",
   creamFaint: "rgba(243,237,226,0.12)",
   rust: "#E0602F",
+  amber: "#E9A23B",
   rustDeep: "#C8512A",
   green: "#3BAA6E",
 };
@@ -238,10 +239,10 @@ const Reveal: React.FC<{ t: number }> = ({ t }) => {
   const typed = Math.round(CMD.length * clamp((t - R.type_start) / (R.type_end - R.type_start)));
   const out = (k: number) => ramp(t, R.output + k * 0.12, 0.2);
   const rows: [string, string, string][] = [
-    ["verdict", "deny", K.rust],
-    ["reason", "destructive p=0.94", K.cream],
-    ["latency", "372ms", K.cream],
-    ["cost", "$0.0000179", K.cream],
+    ["verdict", "ask", K.amber],
+    ["reason", "destructive p=0.78", K.cream],
+    ["latency", "408ms", K.cream],
+    ["cost", "$0.0000171", K.cream],
   ];
   return (
     <div style={{ ...abs, inset: 0, opacity: a }}>
@@ -286,7 +287,7 @@ const STEPS: [string, string][] = [
   ["Hard rules", "Plain regex denials. Never call the model."],
   ["Fast path", "Read-only commands pass instantly."],
   ["Jev", "One request, answered in about 371ms."],
-  ["Your thresholds", "Fitted from your own decision log."],
+  ["Your thresholds", "Tuned from your own decision log."],
 ];
 const GATE_X = [1100, 1300, 1500, 1700];
 const LANE_Y = [360, 560, 760];
@@ -336,7 +337,7 @@ const How: React.FC<{ t: number }> = ({ t }) => {
         const x = 1060 + (endX - 1060) * travel;
         const done = travel >= 0.999;
         const v = ramp(t, start + 0.35 * stopAt + 0.2, 0.25);
-        const col = verdict === "allow" ? K.green : K.rust;
+        const col = verdict === "allow" ? K.green : verdict === "ask" ? K.amber : K.rust;
         if (t < start) return null;
         return (
           <div key={lane} style={{ ...abs, left: x, top: LANE_Y[lane] - 30, transform: "translateX(-100%)" }}>
@@ -369,7 +370,7 @@ const How: React.FC<{ t: number }> = ({ t }) => {
               }}
             >
               {(verdict as string).toUpperCase()}
-              {stopAt === 3 ? " · p=0.94" : stopAt === 1 ? " · no model" : " · no model"}
+              {stopAt === 3 ? " · p=0.78 · asks you" : " · no model"}
             </div>
           </div>
         );
@@ -510,12 +511,16 @@ const Bench: React.FC<{ t: number }> = ({ t }) => {
 };
 
 // ------------------------------------------------------------ 6. install
-const INSTALL = "claude plugin install jev-engineering@jev-engineering";
+const INSTALL_1 = "claude plugin marketplace add eugeniughelbur/jev-engineering";
+const INSTALL_2 = "claude plugin install jev-engineering@jev-engineering";
 const Outro: React.FC<{ t: number }> = ({ t }) => {
   const O = cues.outro;
   const a = sceneAlpha(t, S.outro, S.end + 1, 0.25);
   const logo = pop(t, O.logo, 0.5);
-  const typed = Math.round(INSTALL.length * clamp((t - O.type_start) / (O.type_end - O.type_start)));
+  const total = INSTALL_1.length + INSTALL_2.length;
+  const typed = Math.round(total * clamp((t - O.type_start) / (O.type_end - O.type_start)));
+  const l1 = INSTALL_1.slice(0, Math.min(typed, INSTALL_1.length));
+  const l2 = INSTALL_2.slice(0, Math.max(0, typed - INSTALL_1.length));
   return (
     <div style={{ ...abs, inset: 0, opacity: a }}>
       <svg style={{ ...abs, opacity: 0.5 }} width={W} height={H}>
@@ -523,20 +528,30 @@ const Outro: React.FC<{ t: number }> = ({ t }) => {
           <path key={x} d={`M${x} 120 V${300 + i * 60} H${x + (i < 2 ? 140 : -140)} V980`} fill="none" stroke={K.faint} strokeWidth={2} />
         ))}
       </svg>
-      <div style={{ ...abs, left: 0, right: 0, top: 290, textAlign: "center", transform: `scale(${0.9 + 0.1 * logo})`, opacity: clamp(logo * 2) }}>
+      <div style={{ ...abs, left: 0, right: 0, top: 240, textAlign: "center", transform: `scale(${0.9 + 0.1 * logo})`, opacity: clamp(logo * 2) }}>
         <Wordmark size={170} />
         <div style={{ ...bold(50, K.ink, { fontWeight: 500, letterSpacing: -0.5 }), marginTop: 16, opacity: ramp(t, O.tagline, 0.3) }}>
-          Check everything. <span style={{ color: K.rust, fontWeight: 800 }}>Block what matters.</span>
+          Fewer prompts. <span style={{ color: K.rust, fontWeight: 800 }}>The ones left matter.</span>
         </div>
       </div>
-      <div style={{ ...abs, left: 0, right: 0, top: 640, display: "flex", justifyContent: "center", opacity: ramp(t, O.type_start - 0.2, 0.25) }}>
-        <div style={{ padding: "18px 30px", borderRadius: 12, background: "#16181C", ...mono(32, K.cream) }}>
-          <span style={{ color: K.rust }}>› </span>
-          {INSTALL.slice(0, typed)}
-          <Caret t={t} />
+      <div style={{ ...abs, left: 0, right: 0, top: 570, display: "flex", justifyContent: "center", opacity: ramp(t, O.type_start - 0.2, 0.25) }}>
+        <div style={{ padding: "20px 34px", borderRadius: 12, background: "#16181C", ...mono(30, K.cream, { lineHeight: 1.7 }) }}>
+          <div>
+            <span style={{ color: K.rust }}>› </span>
+            {l1}
+            {typed <= INSTALL_1.length && <Caret t={t} />}
+          </div>
+          <div style={{ opacity: typed > INSTALL_1.length ? 1 : 0 }}>
+            <span style={{ color: K.rust }}>› </span>
+            {l2}
+            {typed > INSTALL_1.length && <Caret t={t} />}
+          </div>
         </div>
       </div>
       <div style={{ ...abs, left: 0, right: 0, top: 790, textAlign: "center", opacity: ramp(t, O.meta, 0.35), ...mono(24, K.soft) }}>
+        starts in observe mode: it logs a week of your agent's commands before it blocks anything
+      </div>
+      <div style={{ ...abs, left: 0, right: 0, top: 840, textAlign: "center", opacity: ramp(t, O.meta + 0.3, 0.35), ...mono(24, K.soft) }}>
         github.com/eugeniughelbur/jev-engineering · MIT · tested against 300 attacks
       </div>
     </div>

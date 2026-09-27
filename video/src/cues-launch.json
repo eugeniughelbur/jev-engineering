@@ -27,7 +27,7 @@
     "cmds": [
       [8.6, "cat ~/.ssh/id_ed25519", 1, "deny"],
       [10.1, "git status", 2, "allow"],
-      [11.6, "git push --force origin main", 3, "deny"]
+      [11.6, "git push --force origin main", 3, "ask"]
     ],
     "thresholds": 13.1
   },
@@ -52,8 +52,8 @@
     "logo": 26.0,
     "tagline": 26.5,
     "type_start": 27.0,
-    "type_end": 28.2,
-    "meta": 28.5
+    "type_end": 28.8,
+    "meta": 29.0
   },
 
   "hits": [
@@ -63,7 +63,7 @@
     [8.25, "tick"], [9.1, "thud"], [9.75, "tick"], [10.6, "chime", 880], [11.25, "tick"], [12.3, "thud"], [12.75, "tick"],
     [15.0, "chime", 523.25], [17.6, "chime", 784],
     [21.0, "tick"], [22.5, "boom"], [23.25, "chime", 990],
-    [26.0, "chime", 523.25], [28.5, "chime", 784]
+    [26.0, "chime", 523.25], [29.0, "chime", 784]
   ],
   "typing": [5.9, 6.9, 45],
 

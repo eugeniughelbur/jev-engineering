@@ -22,7 +22,7 @@ const Heading: React.FC<{ n?: number; text: string; t: number; at: number; top?:
 };
 
 const Verdict: React.FC<{ v: string; p: number; size?: number }> = ({ v, p, size = 40 }) => {
-  const col = v === "allow" ? C.green : C.rust;
+  const col = v === "allow" ? C.green : v === "ask" ? "#C98A1E" : C.rust;
   return (
     <span
       style={{
@@ -327,7 +327,7 @@ export const Cases: React.FC<P> = ({ t }) => {
 };
 
 // ---------------------------------------------------------------- outro
-const INSTALL = "claude plugin install jev-engineering@jev-engineering";
+const INSTALL = "claude plugin marketplace add eugeniughelbur/jev-engineering";
 
 export const RepoOutro: React.FC<P> = ({ t }) => {
   const a = sceneAlpha(t, S.outro, S.end + 1, 0.2);
@@ -353,7 +353,8 @@ export const RepoOutro: React.FC<P> = ({ t }) => {
           background: C.ink,
           borderRadius: 14,
           fontFamily: MONO,
-          fontSize: 38,
+          fontSize: 34,
+          lineHeight: 1.6,
           color: "#E9E4D8",
           whiteSpace: "pre",
           opacity: ramp(t, O.type_start - 0.2, 0.2),
@@ -361,9 +362,12 @@ export const RepoOutro: React.FC<P> = ({ t }) => {
       >
         <span style={{ color: C.green }}>$ </span>
         {INSTALL.slice(0, n)}
-        <span style={{ opacity: Math.floor(t * 4) % 2 ? 1 : 0, color: C.rust }}>▍</span>
+        {n < INSTALL.length && <span style={{ opacity: Math.floor(t * 4) % 2 ? 1 : 0, color: C.rust }}>▍</span>}
+        <div style={{ opacity: n >= INSTALL.length ? 1 : 0 }}>
+          <span style={{ color: C.green }}>$ </span>claude plugin install jev-engineering@jev-engineering
+        </div>
       </div>
-      <div style={{ ...abs, left: 0, right: 0, top: 800, textAlign: "center", opacity: ramp(t, O.url, 0.4) }}>
+      <div style={{ ...abs, left: 0, right: 0, top: 830, textAlign: "center", opacity: ramp(t, O.url, 0.4) }}>
         <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: 42, color: C.green }}>github.com/eugeniughelbur/jev-engineering</div>
         <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 34, color: C.soft, marginTop: 10 }}>free · MIT · every number measured</div>
       </div>

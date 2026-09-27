@@ -16,7 +16,7 @@
     "title": 4.25,
     "rows": [
       [5.0, "git status", "allow", "fast path, no model", "<10ms"],
-      [6.0, "git push --force origin main", "deny", "destructive p=0.94", "372ms"],
+      [6.0, "git push --force origin main", "ask", "destructive p=0.78", "408ms"],
       [7.0, "cat ~/.ssh/id_ed25519", "deny", "hard rule, no model", "<10ms"]
     ],
     "caption": 8.25
@@ -31,8 +31,8 @@
   "packs": {
     "title": 15.25,
     "cards": [
-      [16.0, "email", "Here's the prod key: sk_live_4f9...", "private_data 0.94", "deny"],
-      [17.5, "refund", "Refund $4,200 on order #1182 ($42)", "authorised 0.02", "deny"]
+      [16.0, "email", "Here's the prod key: sk_live_4f9...", "private_data 0.96", "deny"],
+      [17.5, "refund", "Refund $4,200 on order #1182 ($42)", "amount unusual 0.98", "deny"]
     ],
     "chips": 19.0
   },

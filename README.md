@@ -27,7 +27,7 @@ claude plugin marketplace add eugeniughelbur/jev-engineering
 claude plugin install jev-engineering@jev-engineering
 ```
 
-Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It installs in observe mode, so it logs every decision and blocks nothing until you say otherwise.
+Restart Claude Code, set `OPENROUTER_API_KEY`, then run `/jev-status`. It installs in observe mode, so it logs every decision and blocks nothing until you say otherwise. Without a key it changes nothing: your normal permission prompts carry on.
 
 Or run it standalone:
 
@@ -40,14 +40,17 @@ export OPENROUTER_API_KEY=sk-or-...
 
 ```json
 {
-  "verdict": "deny",
+  "verdict": "ask",
   "source": "model",
-  "reason": "destructive p=0.94",
-  "confidence": 0.71,
-  "latency_ms": 372,
-  "cost": 1.79e-05
+  "reason": "verdict=ask, p=0.78",
+  "destructive": 0.78,
+  "confidence": 0.84,
+  "latency_ms": 408,
+  "cost": 1.71e-05
 }
 ```
+
+Run on 2026-09-27 against `typesafe/jev-1.13`. A force push to main is risky but sometimes intended, so the gate stops and asks you instead of refusing. An earlier run of the same command returned `deny` at 0.94. Scores move when the model is retrained, which is why the thresholds live in your own config.
 
 ## Why this exists
 
@@ -174,11 +177,11 @@ A gate is only as good as its questions, and shell commands are not the only thi
 uv run packs.py            # see them all
 ```
 
-Copy the closest one into `~/.jev-gate/packs/` and edit it. Measured examples, run live:
+Copy the closest one into `~/.jev-gate/packs/` and edit it. Measured examples, run live on 2026-09-27:
 
-- an email containing a live API key: `private_data 0.94`, verdict `deny`
-- the same email without it: `private_data 0.05`, verdict `allow`
-- a $4,200 refund on a $42 order: `authorised 0.02`, verdict `deny`
+- an email containing a live API key: `private_data 0.96`, verdict `deny`
+- the same email without it: `private_data 0.07`, verdict `allow`
+- a $4,200 refund on a $42 order: `amount_unusual 0.98`, `authorised 0.14`, verdict `deny`
 
 ## Guarding everything else
 
