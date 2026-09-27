@@ -1,0 +1,59 @@
+{
+  "_": "Single source of timing, in seconds after PRE. Scenes read it, scripts/music.py reads it. 120 BPM: beat 0.5s, bar 2s.",
+  "bpm": 120,
+  "fps": 30,
+  "pre": 0.6,
+  "duration": 30,
+  "scene": { "problem": 0, "rule": 4, "diff": 8, "route": 14, "bench": 20, "outro": 26, "end": 30 },
+
+  "problem": {
+    "words": [
+      [0.25, "Your"], [0.5, "AI"], [0.75, "reviewer"], [1.0, "re-reads"],
+      [1.25, "the"], [1.5, "whole"], [1.75, "pull"], [2.0, "request."]
+    ],
+    "slams": [[2.5, "Every."], [3.0, "Single."], [3.5, "Push."]]
+  },
+
+  "rule": {
+    "title": 4.25,
+    "cards": [5.0, 5.25, 5.5, 5.75, 6.0, 6.25],
+    "stamps": [6.5, 6.75, 7.0, 7.25, 7.5, 7.75],
+    "caption": 7.0
+  },
+
+  "diff": {
+    "lines": [8.25, 8.5, 8.75, 9.0, 9.25],
+    "fanout": 10.0,
+    "checks_fill": 10.5,
+    "hit": 12.0,
+    "verdict": 13.0
+  },
+
+  "route": {
+    "fork": 14.25,
+    "cves": [15.0, 15.25, 15.5, 15.75, 16.0, 16.25, 16.5, 16.75, 17.0, 17.25, 17.5, 17.75, 18.0],
+    "safe": [15.125, 16.125, 17.125, 18.125],
+    "total": 18.5
+  },
+
+  "bench": {
+    "slams": [20.0, 22.0, 23.0, 24.0],
+    "disclosure": 25.0
+  },
+
+  "outro": {
+    "type_start": 26.25,
+    "type_end": 27.75,
+    "title": 28.0,
+    "url": 28.5
+  },
+
+  "music": {
+    "chords": ["Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "G", "Am", "F", "C", "Am"],
+    "drums_in": 4.0,
+    "break": [19.5, 20.0],
+    "drop": 20.0,
+    "drums_out": 27.0,
+    "risers": [[2.0, 4.0], [18.0, 20.0]]
+  }
+}
