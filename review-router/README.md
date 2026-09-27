@@ -1,5 +1,7 @@
 # review-router: skip the full AI review on 42% of pushes, catch 8 of 8 CVE fixes
 
+![13 CVE fixes looked harmless: read the diff, not the filename](../assets/review-router.jpg)
+
 A GitHub Action that reads what a push adds and answers `full` or `quick`. Your AI reviewer then reads the whole pull request only when it has to. On 561 commits from FastAPI, Express and Django, it let 42% go quick and sent all 8 CVE fixes to a full review. On 5 more Django CVE fixes held out from that run, it went 5 for 5 ([results](../results/2026-09-27-review-routing-public.md)).
 
 It can only raise a review. Any error, timeout or missing key answers `full`.

@@ -12,7 +12,9 @@ A tool-call gate for Claude Code, Codex, Cursor and anything else you run, backe
 
 It also ships the attack kit I used to find out whether a gate like this holds. It mostly does. The interesting part is how it fails.
 
-**New:** [review-router](review-router/), a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. On 561 public commits, it let 42% skip and sent all 8 CVE fixes to a full review. [Results](results/2026-09-27-review-routing-public.md).
+**New:** [review-router](review-router/), a GitHub Action that tells your AI code reviewer when it can skip reading the whole pull request. A typical path rule sent 13 real CVE fixes in Django and Express to a quick review. review-router sent all 13 to a full one, and still let 42% of 561 public commits skip. [Results](results/2026-09-27-review-routing-public.md).
+
+[![13 CVE fixes looked harmless: read the diff, not the filename](assets/review-router.jpg)](review-router/)
 
 ![A dangerous command is denied in 371 milliseconds, a safe one passes with no model call](assets/demo.gif)
 

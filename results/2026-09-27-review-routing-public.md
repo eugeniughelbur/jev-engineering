@@ -1,5 +1,7 @@
 # Review routing on FastAPI, Express and Django: 13 of 13 CVE fixes caught
 
+![13 CVE fixes looked harmless](../assets/review-router.jpg)
+
 A path rule sent 8 CVE fixes in these three repos to a quick review, because the files had ordinary names. Reading the diff with Jev sent all 8 to a full review. It still let 42% of 561 commits go quick, for $0.029 in Jev across the whole run.
 
 Run on 2026-09-27 with [bench_public.py](../usecases/ai-review-routing/bench_public.py). Raw rows are in [review-routing/](review-routing/).
