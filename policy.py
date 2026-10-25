@@ -69,7 +69,18 @@ EMBEDDED: dict = {
         {"pattern": r"\bhistory\b.*\|\s*(curl|wget|nc)\b", "reason": "exfiltrates shell history"},
         {"pattern": r"\bcurl\b[^|]*\|\s*(ba)?sh\b", "reason": "pipes a remote script into a shell"},
         {"pattern": r"(~|\$HOME|/Users/[^/\s]+|/home/[^/\s]+)/\.(aws/credentials|config/gcloud/|kube/config|docker/config\.json|netrc|git-credentials)", "reason": "reads cloud or registry credentials"},
-        {"pattern": r"\b(env|printenv)\b[^|;&]*\|\s*(curl|wget|nc|ncat)\b", "reason": "sends your environment, and every secret in it, over the network"},
+        # `env` only counts where a command starts: line start, after a separator,
+        # a quote (`bash -c 'env | curl'`), a prefix like sudo or FOO=1, or a path
+        # like /usr/bin/env. Matching the bare word blocked `grep "board.env\|curl"`
+        # and PR bodies that quote this rule (issue #2).
+        {
+            "pattern": (
+                r"(?:^|[\n;&|({'\"]|\$\(|\b(?:then|do|else)\s)\s*"
+                r"(?:(?:sudo(?:\s+-\S+(?:\s+\w+)?)*|command|exec|nohup|time|nice|builtin|\w+=\S*)\s+)*"
+                r"(?:[\w.-]*/)*(?:env|printenv)\b[^|;&]*\|\s*(?:curl|wget|nc|ncat)\b"
+            ),
+            "reason": "sends your environment, and every secret in it, over the network",
+        },
     ],
     "questions": {
         "destructive": {
