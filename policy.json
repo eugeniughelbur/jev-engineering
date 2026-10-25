@@ -55,7 +55,7 @@
       "reason": "reads cloud or registry credentials"
     },
     {
-      "pattern": "\\b(env|printenv)\\b[^|;&]*\\|\\s*(curl|wget|nc|ncat)\\b",
+      "pattern": "(?:^|[\\n;&|({'\\\"]|\\$\\(|\\b(?:then|do|else)\\s)\\s*(?:(?:sudo(?:\\s+-\\S+(?:\\s+\\w+)?)*|command|exec|nohup|time|nice|builtin|\\w+=\\S*)\\s+)*(?:[\\w.-]*/)*(?:env|printenv)\\b[^|;&]*\\|\\s*(?:curl|wget|nc|ncat)\\b",
       "reason": "sends your environment, and every secret in it, over the network"
     }
   ],
